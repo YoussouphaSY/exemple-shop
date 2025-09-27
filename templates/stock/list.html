@@ -179,8 +179,8 @@
                             </span>
                         </td>
                         <td>{{ produit.seuil_alerte }}</td>
-                        <td>{{ produit.prix_achat }} FCFA</td>
-                        <td><strong>{{ produit.prix_vente }} FCFA</strong></td>
+                        <td>{{ produit.prix_achat|intcomma }} FCFA</td>
+                        <td><strong>{{ produit.prix_vente|intcomma }} FCFA</strong></td>
                         <td>
                             {% load math_filters %}
                             <strong class="montant-cfa">{{ produit.prix_achat|mul:produit.quantite_stock|floatformat:0|intcomma }}</strong>

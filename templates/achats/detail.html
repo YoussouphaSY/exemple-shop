@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Achat {{ achat.numero }} - L'EXEMPLE SHOP{% endblock %}
 
@@ -88,7 +89,7 @@
                             </tr>
                             <tr>
                                 <th>Total TTC:</th>
-                                <td><strong class="montant-cfa fs-5" style="color: black;">{{ achat.total_ttc|floatformat:0 }}</strong></td>
+                                <td><strong class="montant-cfa fs-5" style="color: black;">{{ achat.total_ttc|floatformat:0|intcomma }}</strong></td>
                             </tr>
                         </table>
                     </div>
@@ -127,7 +128,7 @@
                                     <strong>{{ item.produit.nom }}</strong>
                                     <br><small class="text-muted">{{ item.produit.categorie.nom }}</small>
                                 </td>
-                                <td class="montant-cfa">{{ item.prix_unitaire|floatformat:0 }}</td>
+                                <td class="montant-cfa">{{ item.prix_unitaire|floatformat:0|intcomma }}</td>
                                 <td>
                                     <span class="badge bg-primary">{{ item.quantite }}</span>
                                 </td>
@@ -136,7 +137,7 @@
                                         {{ item.quantite_recue|default:"-" }}
                                     </span>
                                 </td>
-                                <td><strong class="montant-cfa">{{ item.total_ttc|floatformat:0 }}</strong></td>
+                                <td><strong class="montant-cfa">{{ item.total_ttc|floatformat:0|intcomma  }}</strong></td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -147,7 +148,7 @@
                         <tfoot>
                             <tr class="table-active">
                                 <th colspan="4">Total</th>
-                                <th class="montant-cfa">{{ achat.total_ttc|floatformat:0 }}</th>
+                                <th class="montant-cfa">{{ achat.total_ttc|floatformat:0|intcomma  }}</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -174,11 +175,11 @@
                 <hr>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Sous-total HT:</span>
-                    <span class="montant-cfa">{{ achat.total_ht|floatformat:0 }}</span>
+                    <span class="montant-cfa">{{ achat.total_ht|floatformat:0|intcomma }}</span>
                 </div>
                 <div class="d-flex justify-content-between">
                     <strong>Total TTC:</strong>
-                    <strong class="montant-cfa text-success">{{ achat.total_ttc|floatformat:0 }}</strong>
+                    <strong class="montant-cfa text-success">{{ achat.total_ttc|floatformat:0|intcomma }}</strong>
                 </div>
             </div>
         </div>
