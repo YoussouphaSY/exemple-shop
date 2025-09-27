@@ -44,6 +44,9 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def test_func(self):
         return self.request.user.role in ['admin', 'manager']
+    
+    def get_queryset(self):
+        return User.objects.all().order_by('id')  # ← ordre explicite
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
