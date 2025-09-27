@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% load humanize %}
+
+
+{% block title %}Stock - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-boxes"></i> Gestion du Stock</h1>
+    <div>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'stock:ajustement' %}" class="btn btn-warning">
+            <i class="bi bi-sliders" style="color: black;"></i> Ajustement
+        </a>
+        <a href="{% url 'stock:inventaire_create' %}" class="btn btn-info">
+            <i class="bi bi-clipboard-check" style="color: black;"></i> Inventaire
+        </a>
+        {% endif %}
+        <a href="{% url 'stock:mouvements' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-repeat" style="color: black;"></i> Mouvements
+        </a>
+    </div>
+</div>
+
+<!-- Alertes stock critique -->
+{% if stock_critique %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Attention !</strong> {{ stock_critique.count }} produit{{ stock_critique.count|pluralize }} en stock critique.
+    <button class="btn btn-sm btn-outline-warning ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#stockCritique">
+        Voir les détails
+    </button>
+</div>
+
+<div class="collapse mb-4" id="stockCritique">
+    <div class="card border-warning">
+        <div class="card-header bg-warning text-dark">
+            <h6 class="card-title mb-0">Produits en Stock Critique</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Stock Actuel</th>
+                            <th>Seuil d'Alerte</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produit in stock_critique %}
+                        <tr>
+                            <td>
+                                <strong>{{ produit.nom }}</strong>
+                                <br><small class="text-muted">{{ produit.categorie.nom }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger">{{ produit.quantite_stock }}</span>
+                            </td>
+                            <td>{{ produit.seuil_alerte }}</td>
+                            <td>
+                                <a href="{% url 'achats:create' %}?produit={{ produit.id }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-cart-plus"></i> Commander
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Vue d'ensemble du stock -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Produits Actifs</h6>
+                        <h4>{{ produits.count }}</h4>
+                    </div>
+                    <i class="bi bi-box" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Stock Total</h6>
+                        <h4>{{ produits|length }}</h4>
+                    </div>
+                    <i class="bi bi-boxes" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Stock Critique</h6>
+                        <h4>{{ stock_critique.count|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-exclamation-triangle" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Valeur Stock</h6>
+                        <h4>{{ valeur_stock|default:"0"|floatformat:0|intcomma }} FCFA</h4>
+                    </div>
+                    <i class="bi bi-currency-euro" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des produits avec stock -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list p-2" style="color: black;"></i> État du Stock par Produit
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Catégorie</th>
+                        <th>Stock Actuel</th>
+                        <th>Seuil d'Alerte</th>
+                        <th>Prix d'Achat</th>
+                        <th>Prix de Vente</th>
+                        <th>Valeur Stock</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produit in produits %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if produit.image %}
+                                <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-thumbnail me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                {% endif %}
+                                <div>
+                                    <strong>{{ produit.nom }}</strong>
+                                    {% if produit.description %}
+                                    <br><small class="text-muted">{{ produit.description|truncatechars:30 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ produit.categorie.nom }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %} fs-6">
+                                {{ produit.quantite_stock }}
+                            </span>
+                        </td>
+                        <td>{{ produit.seuil_alerte }}</td>
+                        <td>{{ produit.prix_achat }} FCFA</td>
+                        <td><strong>{{ produit.prix_vente }} FCFA</strong></td>
+                        <td>
+                            {% load math_filters %}
+                            <strong class="montant-cfa">{{ produit.prix_achat|mul:produit.quantite_stock|floatformat:0|intcomma }}</strong>
+                        </td>
+                        <td>
+                            {% if produit.stock_critique %}
+                            <span class="badge bg-danger">Critique</span>
+                            {% elif produit.quantite_stock < 10 %}
+                            <span class="badge bg-warning">Faible</span>
+                            {% else %}
+                            <span class="badge bg-success">OK</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'produits:detail' produit.slug %}" class="btn btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.role in 'admin,manager' %}
+                                <a href="{% url 'stock:ajustement' %}?produit={{ produit.id }}" class="btn btn-outline-warning" title="Ajuster">
+                                    <i class="bi bi-sliders"></i>
+                                </a>
+                                <a href="{% url 'achats:create' %}?produit={{ produit.id }}" class="btn btn-outline-primary" title="Commander">
+                                    <i class="bi bi-cart-plus"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <br>Aucun produit en stock
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination stock" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Premier</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernier</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,249 @@
+[
+{
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$600000$abcd1234567890$xyz1234567890abcdef1234567890abcdef1234567890=",
+        "last_login": null,
+        "is_superuser": true,
+        "username": "admin",
+        "first_name": "Admin",
+        "last_name": "Shop360",
+        "email": "admin@shop360.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2024-01-01T00:00:00Z",
+        "date_creation": "2024-01-01T00:00:00Z",
+        "telephone": "+33123456789",
+        "role": "admin",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "produits.categorie",
+    "pk": 1,
+    "fields": {
+        "nom": "Téléphones",
+        "description": "Smartphones et téléphones portables",
+        "date_creation": "2024-01-01T10:00:00Z"
+    }
+},
+{
+    "model": "produits.categorie",
+    "pk": 2,
+    "fields": {
+        "nom": "Accessoires",
+        "description": "Coques, chargeurs, écouteurs, etc.",
+        "date_creation": "2024-01-01T10:00:00Z"
+    }
+},
+{
+    "model": "produits.categorie",
+    "pk": 3,
+    "fields": {
+        "nom": "Tablettes",
+        "description": "Tablettes numériques",
+        "date_creation": "2024-01-01T10:00:00Z"
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 1,
+    "fields": {
+        "nom": "iPhone 15 Pro Max 256GB",
+        "slug": "iphone-15-pro-max-256gb",
+        "categorie": 1,
+        "description": "Dernier iPhone avec processeur A17 Pro",
+        "prix_achat": 900.00,
+        "prix_vente": 1299.00,
+        "quantite_stock": 15,
+        "seuil_alerte": 5,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 2,
+    "fields": {
+        "nom": "Samsung Galaxy S24 Ultra",
+        "slug": "samsung-galaxy-s24-ultra",
+        "categorie": 1,
+        "description": "Smartphone Samsung haut de gamme",
+        "prix_achat": 800.00,
+        "prix_vente": 1199.00,
+        "quantite_stock": 12,
+        "seuil_alerte": 5,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 3,
+    "fields": {
+        "nom": "Coque iPhone 15 Pro",
+        "slug": "coque-iphone-15-pro",
+        "categorie": 2,
+        "description": "Coque de protection transparente",
+        "prix_achat": 8.00,
+        "prix_vente": 29.99,
+        "quantite_stock": 50,
+        "seuil_alerte": 10,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 4,
+    "fields": {
+        "nom": "Chargeur USB-C 20W",
+        "slug": "chargeur-usb-c-20w",
+        "categorie": 2,
+        "description": "Chargeur rapide USB-C",
+        "prix_achat": 12.00,
+        "prix_vente": 39.99,
+        "quantite_stock": 30,
+        "seuil_alerte": 10,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 5,
+    "fields": {
+        "nom": "AirPods Pro 2",
+        "slug": "airpods-pro-2",
+        "categorie": 2,
+        "description": "Écouteurs sans fil avec réduction de bruit",
+        "prix_achat": 180.00,
+        "prix_vente": 279.99,
+        "quantite_stock": 20,
+        "seuil_alerte": 5,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 6,
+    "fields": {
+        "nom": "iPad Air 11 pouces",
+        "slug": "ipad-air-11-pouces",
+        "categorie": 3,
+        "description": "Tablette iPad Air dernière génération",
+        "prix_achat": 450.00,
+        "prix_vente": 699.99,
+        "quantite_stock": 8,
+        "seuil_alerte": 3,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 7,
+    "fields": {
+        "nom": "Samsung Galaxy Tab S9",
+        "slug": "samsung-galaxy-tab-s9",
+        "categorie": 3,
+        "description": "Tablette Android premium",
+        "prix_achat": 400.00,
+        "prix_vente": 599.99,
+        "quantite_stock": 6,
+        "seuil_alerte": 3,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 8,
+    "fields": {
+        "nom": "Xiaomi Redmi Note 13",
+        "slug": "xiaomi-redmi-note-13",
+        "categorie": 1,
+        "description": "Smartphone milieu de gamme excellent rapport qualité-prix",
+        "prix_achat": 150.00,
+        "prix_vente": 249.99,
+        "quantite_stock": 25,
+        "seuil_alerte": 8,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 9,
+    "fields": {
+        "nom": "Verre trempé iPhone 15",
+        "slug": "verre-trempe-iphone-15",
+        "categorie": 2,
+        "description": "Protection d'écran en verre trempé",
+        "prix_achat": 3.00,
+        "prix_vente": 19.99,
+        "quantite_stock": 100,
+        "seuil_alerte": 20,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "produits.produit",
+    "pk": 10,
+    "fields": {
+        "nom": "Powerbank 10000mAh",
+        "slug": "powerbank-10000mah",
+        "categorie": 2,
+        "description": "Batterie externe portable",
+        "prix_achat": 18.00,
+        "prix_vente": 49.99,
+        "quantite_stock": 35,
+        "seuil_alerte": 10,
+        "date_ajout": "2024-01-01T10:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "achats.fournisseur",
+    "pk": 1,
+    "fields": {
+        "nom": "Apple Distribution France",
+        "contact": "Jean Dupont",
+        "telephone": "+33147123456",
+        "email": "contact@apple-distribution.fr",
+        "adresse": "123 Avenue des Champs, 75008 Paris",
+        "date_creation": "2024-01-01T09:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "achats.fournisseur",
+    "pk": 2,
+    "fields": {
+        "nom": "Samsung Electronics",
+        "contact": "Marie Martin",
+        "telephone": "+33156789012",
+        "email": "pro@samsung.fr",
+        "adresse": "456 Rue de la Tech, 92100 Boulogne",
+        "date_creation": "2024-01-01T09:00:00Z",
+        "actif": true
+    }
+},
+{
+    "model": "achats.fournisseur",
+    "pk": 3,
+    "fields": {
+        "nom": "Accessoires Mobile Pro",
+        "contact": "Pierre Durand",
+        "telephone": "+33145678901",
+        "email": "commandes@accessoires-mobile.com",
+        "adresse": "789 Boulevard du Commerce, 93200 Saint-Denis",
+        "date_creation": "2024-01-01T09:00:00Z",
+        "actif": true
+    }
+}
+]

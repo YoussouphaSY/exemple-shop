@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if object %}Modifier {{ object.nom }}{% else %}Nouvelle Catégorie{% endif %} - Shop360
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-{% if object %}pencil{% else %}plus-circle{% endif %}"></i>
+        {% if object %}Modifier {{ object.nom }}{% else %}Nouvelle Catégorie{% endif %}
+    </h1>
+    <a href="{% url 'produits:categories' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Informations de la Catégorie
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} la Catégorie
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-lightbulb"></i> Conseils</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Choisissez un nom clair et descriptif
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Ajoutez une description pour clarifier l'usage
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Organisez vos produits par type
+                    </li>
+                </ul>
+                
+                {% if object %}
+                <hr>
+                <h6>Statistiques</h6>
+                <small class="text-muted">
+                    <strong>Créée le:</strong> {{ object.date_creation|date:"d/m/Y" }}<br>
+                    <strong>Produits:</strong> {{ object.produits.count }}<br>
+                    <strong>Actifs:</strong> {{ object.produits.filter.actif=True.count }}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

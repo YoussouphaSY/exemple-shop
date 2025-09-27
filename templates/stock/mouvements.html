@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}Mouvements de Stock - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-arrow-repeat"></i> Mouvements de Stock</h1>
+    <div>
+        <a href="{% url 'stock:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour Stock
+        </a>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'stock:ajustement' %}" class="btn btn-warning">
+            <i class="bi bi-sliders" style="color: black;"></i> Ajustement
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Type de mouvement</label>
+                <select name="type" class="form-select">
+                    <option value="">Tous les types</option>
+                    <option value="ENTREE" {% if request.GET.type == 'ENTREE' %}selected{% endif %}>Entrée</option>
+                    <option value="SORTIE" {% if request.GET.type == 'SORTIE' %}selected{% endif %}>Sortie</option>
+                    <option value="AJUSTEMENT" {% if request.GET.type == 'AJUSTEMENT' %}selected{% endif %}>Ajustement</option>
+                    <option value="INVENTAIRE" {% if request.GET.type == 'INVENTAIRE' %}selected{% endif %}>Inventaire</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Source</label>
+                <select name="source" class="form-select">
+                    <option value="">Toutes les sources</option>
+                    <option value="achat" {% if request.GET.source == 'achat' %}selected{% endif %}>Achat</option>
+                    <option value="vente" {% if request.GET.source == 'vente' %}selected{% endif %}>Vente</option>
+                    <option value="ajustement" {% if request.GET.source == 'ajustement' %}selected{% endif %}>Ajustement</option>
+                    <option value="inventaire" {% if request.GET.source == 'inventaire' %}selected{% endif %}>Inventaire</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date début</label>
+                <input type="date" name="date_debut" class="form-control" value="{{ request.GET.date_debut }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date fin</label>
+                <input type="date" name="date_fin" class="form-control" value="{{ request.GET.date_fin }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel" style="color: black;"></i> Filtrer
+                </button>
+                <a href="{% url 'stock:mouvements' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Entrées</h6>
+                        <h4>{{ stats.entrees|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-arrow-down-circle" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Sorties</h6>
+                        <h4>{{ stats.sorties|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-arrow-up-circle" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Ajustements</h6>
+                        <h4>{{ stats.ajustements|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-sliders" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Mouvements</h6>
+                        <h4>{{ mouvements.count|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-arrow-repeat" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des mouvements -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list p-2" style="color: black;"></i> Historique des Mouvements
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Produit</th>
+                        <th>Type</th>
+                        <th>Quantité</th>
+                        <th>Stock Avant</th>
+                        <th>Stock Après</th>
+                        <th>Source</th>
+                        <th>Référence</th>
+                        <th>Utilisateur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mouvement in mouvements %}
+                    <tr>
+                        <td>
+                            <small>{{ mouvement.date|date:"d/m/Y" }}</small><br>
+                            <small class="text-muted">{{ mouvement.date|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ mouvement.produit.nom }}</strong>
+                            <br><small class="text-muted">{{ mouvement.produit.categorie.nom }}</small>
+                        </td>
+                        <td>
+                            <span class="badge {% if mouvement.type == 'ENTREE' %}bg-success{% elif mouvement.type == 'SORTIE' %}bg-danger{% elif mouvement.type == 'AJUSTEMENT' %}bg-warning{% else %}bg-info{% endif %}">
+                                {{ mouvement.get_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="{% if mouvement.type == 'ENTREE' %}text-success{% elif mouvement.type == 'SORTIE' %}text-danger{% endif %}">
+                                {% if mouvement.type == 'ENTREE' %}+{% elif mouvement.type == 'SORTIE' %}-{% endif %}{{ mouvement.quantite }}
+                            </span>
+                        </td>
+                        <td>{{ mouvement.quantite_avant }}</td>
+                        <td>
+                            <strong>{{ mouvement.quantite_apres }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ mouvement.get_source_display }}</span>
+                        </td>
+                        <td>
+                            {% if mouvement.reference %}
+                            <code>{{ mouvement.reference }}</code>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mouvement.utilisateur %}
+                            {{ mouvement.utilisateur.get_full_name|default:mouvement.utilisateur.username }}
+                            {% else %}
+                            <span class="text-muted">Système</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if mouvement.motif %}
+                    <tr class="table-light">
+                        <td colspan="9">
+                            <small class="text-muted">
+                                <i class="bi bi-chat-left-text"></i> {{ mouvement.motif }}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-arrow-repeat" style="font-size: 2rem;"></i>
+                            <br>Aucun mouvement de stock trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination mouvements" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Premier</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Dernier</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

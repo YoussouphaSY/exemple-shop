@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Créer un Utilisateur - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-plus"></i> Créer un Nouvel Utilisateur</h1>
+    <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Informations de l'Utilisateur
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="modern-form">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                {{ form.username }}
+                                <label>{{ form.username.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.role.label_tag }}
+                                {{ form.role }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                {{ form.first_name }}
+                                <label>{{ form.first_name.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                {{ form.last_name }}
+                                <label>{{ form.last_name.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                {{ form.email }}
+                                <label>{{ form.email.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                {{ form.telephone }}
+                                <label>{{ form.telephone.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                {{ form.password1 }}
+                                <label>{{ form.password1.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                {{ form.password2 }}
+                                <label>{{ form.password2.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-person-plus"></i> Créer l'Utilisateur
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-shield-check"></i> Rôles et Permissions</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><span class="badge bg-danger">Administrateur</span></h6>
+                    <small class="text-muted">
+                        • Accès complet à toutes les fonctionnalités<br>
+                        • Gestion des utilisateurs<br>
+                        • Configuration système<br>
+                        • Rapports avancés
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><span class="badge bg-warning">Gestionnaire</span></h6>
+                    <small class="text-muted">
+                        • Gestion des produits et stocks<br>
+                        • Gestion des achats et fournisseurs<br>
+                        • Accès aux rapports financiers<br>
+                        • Gestion des inventaires
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><span class="badge bg-info">Caissier</span></h6>
+                    <small class="text-muted">
+                        • Interface de vente uniquement<br>
+                        • Consultation des stocks<br>
+                        • Transactions de base<br>
+                        • Impression de tickets
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modern-card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-key"></i> Sécurité</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Mot de passe minimum 8 caractères
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Email unique obligatoire
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Nom d'utilisateur unique
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Permissions automatiques selon le rôle
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation en temps réel
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input[required]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+    
+    // Vérification des mots de passe
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    
+    function checkPasswords() {
+        if (password1.value && password2.value) {
+            if (password1.value === password2.value) {
+                password2.classList.remove('is-invalid');
+                password2.classList.add('is-valid');
+            } else {
+                password2.classList.remove('is-valid');
+                password2.classList.add('is-invalid');
+            }
+        }
+    }
+    
+    password1.addEventListener('input', checkPasswords);
+    password2.addEventListener('input', checkPasswords);
+    
+    // Génération automatique du nom d'utilisateur
+    const firstName = document.getElementById('id_first_name');
+    const lastName = document.getElementById('id_last_name');
+    const username = document.getElementById('id_username');
+    
+    function generateUsername() {
+        if (firstName.value && lastName.value && !username.value) {
+            const suggested = (firstName.value + '.' + lastName.value).toLowerCase()
+                .replace(/[^a-z.]/g, '');
+            username.value = suggested;
+        }
+    }
+    
+    firstName.addEventListener('blur', generateUsername);
+    lastName.addEventListener('blur', generateUsername);
+});
+</script>
+{% endblock %}

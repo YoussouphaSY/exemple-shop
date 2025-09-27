@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if object %}Modifier Vente {{ object.numero }}{% else %}Nouvelle Vente{% endif %} - Shop360
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-{% if object %}pencil{% else %}cart-plus{% endif %}"></i>
+        {% if object %}Modifier Vente {{ object.numero }}{% else %}Nouvelle Vente{% endif %}
+    </h1>
+    <a href="{% url 'ventes:list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<form method="post" id="venteForm">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Informations client -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi p-2 bi-person" style="color: black;"></i> Informations Client</h5>
+                </div>
+                <div class="card-body">
+                    {{ form|crispy }}
+                </div>
+            </div>
+            
+            <!-- Articles -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi p-2 bi-list-ul" style="color: black;"></i> Articles</h5>
+                </div>
+                <div class="card-body">
+                    {{ formset.management_form }}
+                    <div id="formset-container">
+                        {% for form in formset %}
+                        <div class="formset-form border rounded p-3 mb-3">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    {{ form.produit.label_tag }}
+                                    {{ form.produit }}
+                                </div>
+                                <div class="col-md-2">
+                                    {{ form.quantite.label_tag }}
+                                    {{ form.quantite }}
+                                </div>
+                                <div class="col-md-3">
+                                    {{ form.prix_unitaire.label_tag }}
+                                    {{ form.prix_unitaire }}
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Total</label>
+                                    <input type="text" class="form-control total-item" readonly>
+                                    {% if formset.can_delete %}
+                                    <div class="form-check mt-2">
+                                        {{ form.DELETE }}
+                                        <label class="form-check-label text-danger">Supprimer</label>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {{ form.id }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="button" id="add-form" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> Ajouter un Article
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Résumé -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-calculator p-2" style="color: black;"></i> Résumé</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Nombre d'articles:</span>
+                        <strong id="nb-articles">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Quantité totale:</span>
+                        <strong id="quantite-totale">0</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Sous-total HT:</span>
+                        <span id="total-ht">0.00 FCFA</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total TTC:</strong>
+                        <strong class="text-success" id="total-ttc">0.00 FCFA</strong>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle p-2" style="color: black;"></i>
+                            {% if object %}Modifier{% else %}Créer{% endif %} la Vente
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aide -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="bi bi-lightbulb p-2" style="color: black;"></i> Aide</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Le prix unitaire est pré-rempli automatiquement
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Le total se calcule automatiquement
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Vérifiez le stock avant validation
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let formCount = parseInt(document.querySelector('#id_form-TOTAL_FORMS').value);
+    
+    // Calcul automatique des totaux
+    function calculateTotals() {
+        let totalHT = 0;
+        let nbArticles = 0;
+        let quantiteTotale = 0;
+        
+        document.querySelectorAll('.formset-form').forEach(function(form) {
+            const quantite = parseFloat(form.querySelector('[name$="-quantite"]').value) || 0;
+            const prix = parseFloat(form.querySelector('[name$="-prix_unitaire"]').value) || 0;
+            const total = quantite * prix;
+            
+            form.querySelector('.total-item').value = total.toFixed(2) + ' FCFA';
+            
+            if (quantite > 0 && prix > 0) {
+                totalHT += total;
+                nbArticles++;
+                quantiteTotale += quantite;
+            }
+        });
+        
+        document.getElementById('nb-articles').textContent = nbArticles;
+        document.getElementById('quantite-totale').textContent = quantiteTotale;
+        document.getElementById('total-ht').textContent = totalHT.toFixed(2) + ' FCFA';
+        document.getElementById('total-ttc').textContent = totalHT.toFixed(2) + ' FCFA';
+    }
+    
+    // Événements pour recalcul automatique
+    document.addEventListener('input', function(e) {
+        if (e.target.name && (e.target.name.includes('quantite') || e.target.name.includes('prix_unitaire'))) {
+            calculateTotals();
+        }
+    });
+    
+    // Pré-remplir le prix unitaire quand on sélectionne un produit
+    document.addEventListener('change', function(e) {
+        if (e.target.name && e.target.name.includes('produit')) {
+            const produitId = e.target.value;
+            if (produitId) {
+                // Ici vous pourriez faire un appel AJAX pour récupérer le prix
+                // Pour l'instant, on laisse l'utilisateur saisir
+            }
+        }
+    });
+    
+    // Ajouter un nouveau formulaire
+    document.getElementById('add-form').addEventListener('click', function() {
+        const container = document.getElementById('formset-container');
+        const emptyForm = container.querySelector('.formset-form').cloneNode(true);
+        
+        // Nettoyer le nouveau formulaire
+        emptyForm.querySelectorAll('input, select').forEach(function(input) {
+            if (input.type !== 'hidden') {
+                input.value = '';
+            }
+            input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
+            input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
+        });
+        
+        container.appendChild(emptyForm);
+        formCount++;
+        document.querySelector('#id_form-TOTAL_FORMS').value = formCount;
+    });
+    
+    // Calcul initial
+    calculateTotals();
+});
+</script>
+{% endblock %}

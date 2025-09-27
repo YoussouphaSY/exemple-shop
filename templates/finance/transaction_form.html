@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if object %}Modifier Transaction{% else %}Nouvelle Transaction{% endif %} - Shop360
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-{% if object %}pencil{% else %}plus-circle{% endif %}"></i>
+        {% if object %}Modifier Transaction{% else %}Nouvelle Transaction{% endif %}
+    </h1>
+    <a href="{% url 'finance:transactions' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Détails de la Transaction
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="modern-form">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.type.label_tag }}
+                                {{ form.type }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.categorie.label_tag }}
+                                {{ form.categorie }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.montant.label_tag }}
+                                <div class="input-group">
+                                    {{ form.montant }}
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.date_valeur.label_tag }}
+                                {{ form.date_valeur }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label_tag }}
+                        {{ form.description }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.piece_jointe.label_tag }}
+                        {{ form.piece_jointe }}
+                        <div class="form-text">Formats acceptés: PDF, JPG, PNG (max 5MB)</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} la Transaction
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Aperçu du montant -->
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-calculator"></i> Aperçu</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="montant-preview">
+                    <h3 class="text-muted">0 FCFA</h3>
+                    <p class="text-muted">Saisissez un montant</p>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Impact sur le solde:</h6>
+                    <div id="impact-preview" class="text-muted">
+                        Solde actuel: {{ solde_actuel|floatformat:0 }} FCFA
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modern-card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-lightbulb"></i> Aide</h5>
+            </div>
+            <div class="card-body">
+                <h6>Types de transactions :</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <span class="badge bg-success">Recette</span> : Ventes, encaissements
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge bg-danger">Dépense</span> : Achats, frais, charges
+                    </li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Catégories courantes :</h6>
+                <ul class="list-unstyled small">
+                    <li>• Vente de produits</li>
+                    <li>• Achat fournisseur</li>
+                    <li>• Frais généraux</li>
+                    <li>• Loyer et charges</li>
+                    <li>• Transport</li>
+                    <li>• Publicité</li>
+                </ul>
+                
+                {% if object %}
+                <hr>
+                <h6>Informations</h6>
+                <small class="text-muted">
+                    <strong>Créée le:</strong> {{ object.date|date:"d/m/Y H:i" }}<br>
+                    <strong>Par:</strong> {{ object.utilisateur.get_full_name|default:object.utilisateur.username }}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const montantInput = document.getElementById('id_montant');
+    const typeSelect = document.getElementById('id_type');
+    const preview = document.getElementById('montant-preview');
+    const impactPreview = document.getElementById('impact-preview');
+    const soldeActuel = {{ solde_actuel|default:0 }};
+    
+    function updatePreview() {
+        const montant = parseFloat(montantInput.value) || 0;
+        const type = typeSelect.value;
+        
+        if (montant > 0) {
+            const color = type === 'RECETTE' ? 'text-success' : 'text-danger';
+            const sign = type === 'RECETTE' ? '+' : '-';
+            preview.innerHTML = `
+                <h3 class="${color}">${sign}${montant.toLocaleString()} FCFA</h3>
+                <p class="text-muted">${type === 'RECETTE' ? 'Recette' : 'Dépense'}</p>
+            `;
+            
+            // Calcul impact sur solde
+            const nouveauSolde = type === 'RECETTE' ? soldeActuel + montant : soldeActuel - montant;
+            impactPreview.innerHTML = `
+                Solde actuel: ${soldeActuel.toLocaleString()} FCFA<br>
+                <strong class="${nouveauSolde >= 0 ? 'text-success' : 'text-danger'}">
+                    Nouveau solde: ${nouveauSolde.toLocaleString()} FCFA
+                </strong>
+            `;
+        } else {
+            preview.innerHTML = `
+                <h3 class="text-muted">0 CFA</h3>
+                <p class="text-muted">Saisissez un montant</p>
+            `;
+            impactPreview.innerHTML = `Solde actuel: ${soldeActuel.toLocaleString()} CFA`;
+        }
+    }
+    
+    montantInput.addEventListener('input', updatePreview);
+    typeSelect.addEventListener('change', updatePreview);
+    
+    // Initial update
+    updatePreview();
+});
+</script>
+{% endblock %}

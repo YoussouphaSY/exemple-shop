@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% load humanize %}
+
+
+{% block title %}Finance - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-wallet2"></i> Vue d'ensemble Financière</h1>
+    <div>
+        <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle" style="color: black;"></i> Nouvelle Transaction
+        </a>
+        <a href="{% url 'finance:export' %}" class="btn btn-outline-primary">
+            <i class="bi bi-download"></i> Exporter
+        </a>
+    </div>
+</div>
+
+<!-- Indicateurs financiers -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Solde Total</h6>
+                        <h4>{{ solde_total|floatformat:0|intcomma }} CFA</h4>
+                    </div>
+                    <i class="bi bi-wallet2" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>CA du Mois</h6>
+                        <h4>{{ ca_mois|floatformat:0|intcomma }} CFA</h4>
+                    </div>
+                    <i class="bi bi-graph-up-arrow" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Dépenses du Mois</h6>
+                        <h4>{{ depenses_mois|floatformat:0|intcomma }} CFA</h4>
+                    </div>
+                    <i class="bi bi-arrow-down-circle" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Bénéfice du Mois</h6>
+                        <h4>{{ benefice_mois|floatformat:0|intcomma }} CFA</h4>
+                    </div>
+                    <i class="bi bi-trophy" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques et données -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-graph-up p-2" style="color: black;"></i> Évolution Financière</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="financeChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-wallet p-2" style="color: black;"></i> Caisse</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h3 class="text-primary">{{ solde_caisse|floatformat:0|intcomma }} CFA</h3>
+                    <p class="text-muted">Solde en caisse</p>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'finance:caisse' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye"></i> Voir Détails
+                    </a>
+                    {% if user.role in 'admin,manager' %}
+                    <a href="{% url 'finance:mouvement_caisse' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-arrow-repeat"></i> Mouvement
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions récentes et budgets -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-clock-history p-2" style="color: black;"></i> Transactions Récentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions_recentes %}
+                            <tr>
+                                <td>{{ transaction.date|date:"d/m/Y" }}</td>
+                                <td>{{ transaction.description|truncatechars:40 }}</td>
+                                <td>
+                                    <span class="badge {% if transaction.type == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ transaction.get_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="{% if transaction.type == 'RECETTE' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if transaction.type == 'RECETTE' %}+{% else %}-{% endif %}{{ transaction.montant|floatformat:0|intcomma }} CFA
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Aucune transaction récente</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{% url 'finance:transactions' %}" class="btn btn-outline-primary btn-sm">
+                        Voir toutes les transactions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-clipboard-data p-2" style="color: black;"></i> Budgets Actifs</h5>
+            </div>
+            <div class="card-body">
+                {% for budget in budgets_actifs %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <h6>{{ budget.nom }}</h6>
+                        <small>{{ budget.pourcentage_realise|floatformat:0|intcomma }}%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar {% if budget.pourcentage_realise > 100 %}bg-danger{% elif budget.pourcentage_realise > 80 %}bg-warning{% else %}bg-success{% endif %}" 
+                             style="width: {{ budget.pourcentage_realise|floatformat:0|intcomma }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ budget.montant_realise|floatformat:0|intcomma }} / {{ budget.montant_prevu|floatformat:0|intcomma }} CFA</small>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center">Aucun budget actif</p>
+                {% endfor %}
+                
+                <div class="d-grid">
+                    <a href="{% url 'finance:budgets' %}" class="btn btn-outline-primary btn-sm">
+                        Gérer les Budgets
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('financeChart').getContext('2d');
+    
+        const data = {
+            labels: {{ chart_labels|safe }},
+            datasets: [
+                {
+                    label: 'Recettes',
+                    data: {{ chart_recettes|safe }},
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Dépenses',
+                    data: {{ chart_depenses|safe }},
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        };
+    
+        new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' CFA';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+    
+
+{% endblock %}

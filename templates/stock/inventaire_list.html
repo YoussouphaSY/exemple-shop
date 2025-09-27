@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventaires - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-clipboard-check"></i> Gestion des Inventaires</h1>
+    {% if user.role in 'admin,manager' %}
+    <a href="{% url 'stock:inventaire_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouvel Inventaire
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% for inventaire in inventaires %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clipboard-check"></i> {{ inventaire.nom }}
+                    {% if inventaire.clos %}
+                    <span class="badge bg-success ms-2">Clos</span>
+                    {% else %}
+                    <span class="badge bg-warning ms-2">En cours</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if inventaire.description %}
+                <p class="card-text">{{ inventaire.description|truncatechars:80 }}</p>
+                {% endif %}
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ inventaire.items.count }}</h4>
+                        <small class="text-muted">Article{{ inventaire.items.count|pluralize }}</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="{% if inventaire.ecarts_count > 0 %}text-warning{% else %}text-success{% endif %}">
+                            {{ inventaire.ecarts_count|default:0 }}
+                        </h4>
+                        <small class="text-muted">Écart{{ inventaire.ecarts_count|pluralize }}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group">
+                        <a href="{% url 'stock:inventaire_detail' inventaire.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Voir
+                        </a>
+                        {% if user.role in 'admin,manager' and not inventaire.clos %}
+                        <a href="{% url 'stock:inventaire_edit' inventaire.pk %}" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    Créé le {{ inventaire.date_creation|date:"d/m/Y" }} par {{ inventaire.utilisateur.get_full_name|default:inventaire.utilisateur.username }}
+                    {% if inventaire.date_cloture %}
+                    <br>Clos le {{ inventaire.date_cloture|date:"d/m/Y" }}
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-clipboard-check" style="font-size: 4rem; color: #dee2e6;"></i>
+            <h3 class="text-muted mt-3">Aucun inventaire</h3>
+            <p class="text-muted">Commencez par créer votre premier inventaire.</p>
+            {% if user.role in 'admin,manager' %}
+            <a href="{% url 'stock:inventaire_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Créer un Inventaire
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

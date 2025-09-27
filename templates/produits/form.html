@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if object %}Modifier {{ object.nom }}{% else %}Nouveau Produit{% endif %} - Shop360
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-{% if object %}pencil{% else %}plus-circle{% endif %}"></i>
+        {% if object %}Modifier {{ object.nom }}{% else %}Nouveau Produit{% endif %}
+    </h1>
+    <a href="{% url 'produits:list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0  py-1">
+                    <i class="bi bi-info-circle"></i> Informations du Produit
+                </h5>
+            </div>
+            <div class="card-body m-3">
+                <form method="post" enctype="multipart/form-data" class="modern-form needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="input-group-modern">
+                                {{ form.nom }}
+                                <label>{{ form.nom.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form.categorie.label_tag }}
+                                {{ form.categorie }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group-modern">
+                        {{ form.description }}
+                        <label>{{ form.description.label }}</label>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.prix_achat.label_tag }}
+                                <div class="input-group">
+                                    {{ form.prix_achat }}
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.prix_vente.label_tag }}
+                                <div class="input-group">
+                                    {{ form.prix_vente }}
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.quantite_stock.label_tag }}
+                                {{ form.quantite_stock }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.seuil_alerte.label_tag }}
+                                {{ form.seuil_alerte }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.image.label_tag }}
+                        {{ form.image }}
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        {{ form.actif }}
+                        <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                            {{ form.actif.label }}
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i>
+                            {% if object %}Modifier{% else %}Créer{% endif %} le Produit
+                        </button>
+                        {% if object %}
+                        <a href="{% url 'produits:detail' object.slug %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-eye"></i> Voir le Produit
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0  py-1"><i class="bi bi-lightbulb"></i> Conseils</h5>
+            </div>
+            <div class="card-body m-3">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Utilisez un nom descriptif et unique
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Définissez un seuil d'alerte approprié
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Ajoutez une image de qualité
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Vérifiez vos prix d'achat et de vente
+                    </li>
+                </ul>
+                
+                {% if object %}
+                <hr>
+                <h6>Statistiques</h6>
+                <small class="text-muted">
+                    <strong>Créé le:</strong> {{ object.date_ajout|date:"d/m/Y" }}<br>
+                    <strong>Marge:</strong> {{ object.marge_pourcentage|floatformat:1 }}%<br>
+                    <strong>Stock:</strong> {{ object.quantite_stock }} unités
+                </small>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Aperçu de la marge -->
+        <div class="modern-card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-1"><i class="bi bi-calculator"></i> Aperçu Marge</h5>
+            </div>
+            <div class="card-body m-3 text-center">
+                <div id="marge-preview">
+                    <h3 class="text-muted">0%</h3>
+                    <p class="text-muted">Saisissez les prix</p>
+                </div>
+                <div id="benefice-preview">
+                    <h4 class="text-success">0 FCFA</h4>
+                    <small class="text-muted">Bénéfice unitaire</small>
+                </div>
+            </div>
+        </div>
+        
+        {% if object and object.image %}
+        <div class="modern-card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-1"><i class="bi bi-image"></i> Image Actuelle</h5>
+            </div>
+            <div class="card-body text-center m-3">
+                <img src="{{ object.image.url }}" alt="{{ object.nom }}" class="img-fluid rounded">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calcul automatique de la marge
+    const prixAchat = document.getElementById('id_prix_achat');
+    const prixVente = document.getElementById('id_prix_vente');
+    const margePreview = document.getElementById('marge-preview');
+    const beneficePreview = document.getElementById('benefice-preview');
+    
+    function calculerMarge() {
+        if (prixAchat.value && prixVente.value) {
+            const achat = parseFloat(prixAchat.value);
+            const vente = parseFloat(prixVente.value);
+            
+            if (achat > 0) {
+                const marge = ((vente - achat) / achat * 100);
+                const benefice = vente - achat;
+                
+                margePreview.innerHTML = `
+                    <h3 class="${marge > 0 ? 'text-success' : 'text-danger'}">${marge.toFixed(1)}%</h3>
+                    <p class="text-muted">Marge bénéficiaire</p>
+                `;
+                
+                beneficePreview.innerHTML = `
+                    <h4 class="${benefice > 0 ? 'text-success' : 'text-danger'}">${benefice.toLocaleString()} CFA</h4>
+                    <small class="text-muted">Bénéfice unitaire</small>
+                `;
+            }
+        }
+    }
+    
+    if (prixAchat && prixVente) {
+        prixAchat.addEventListener('input', calculerMarge);
+        prixVente.addEventListener('input', calculerMarge);
+        
+        // Calcul initial
+        calculerMarge();
+    }
+    
+    // Validation du formulaire
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Auto-génération du slug
+    const nomInput = document.getElementById('id_nom');
+    if (nomInput && !{{ object|yesno:"true,false" }}) {
+        nomInput.addEventListener('input', function() {
+            // Le slug sera généré automatiquement côté serveur
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+
+{% block title %}Rapport Financier - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-earmark-bar-graph"></i> Rapport Financier</h1>
+    <div>
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Imprimer
+        </button>
+        <a href="{% url 'finance:overview' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<!-- Période du rapport -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-calendar-range"></i> Période: {{ date_debut|date:"d/m/Y" }} - {{ date_fin|date:"d/m/Y" }}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Date début</label>
+                <input type="date" name="date_debut" class="form-control" value="{{ date_debut|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Date fin</label>
+                <input type="date" name="date_fin" class="form-control" value="{{ date_fin|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Générer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Résumé financier -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h2>Total Recettes</h2>
+                <h1 class="display-4">{{ total_recettes|floatformat:0 }}</h1>
+                <p class="mb-0">Francs CFA</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h2>Total Dépenses</h2>
+                <h1 class="display-4">{{ total_depenses|floatformat:0 }}</h1>
+                <p class="mb-0">Francs CFA</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h2>Bénéfice Net</h2>
+                <h1 class="display-4 {% if benefice < 0 %}text-danger{% endif %}">{{ benefice|floatformat:0 }}</h1>
+                <p class="mb-0">Francs CFA</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recettes par catégorie -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-arrow-up-circle"></i> Recettes par Catégorie</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Montant</th>
+                                <th>Transactions</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recettes_par_categorie %}
+                            <tr>
+                                <td>{{ item.categorie }}</td>
+                                <td class="montant-cfa">{{ item.total|floatformat:0 }}</td>
+                                <td><span class="badge bg-primary">{{ item.count }}</span></td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: {{ item.total|percentage:total_recettes }}%">
+                                            {{ item.total|percentage:total_recettes|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-arrow-down-circle"></i> Dépenses par Catégorie</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Montant</th>
+                                <th>Transactions</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in depenses_par_categorie %}
+                            <tr>
+                                <td>{{ item.categorie }}</td>
+                                <td class="montant-cfa">{{ item.total|floatformat:0 }}</td>
+                                <td><span class="badge bg-danger">{{ item.count }}</span></td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-danger" style="width: {{ item.total|percentage:total_depenses }}%">
+                                            {{ item.total|percentage:total_depenses|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphique d'évolution -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Évolution Financière</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="evolutionChart" height="100"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Graphique d'évolution
+    const ctx = document.getElementById('evolutionChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
+            datasets: [{
+                label: 'Recettes',
+                data: [{{ total_recettes }}, 150000, 180000, 140000, 200000, 170000],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Dépenses',
+                data: [{{ total_depenses }}, 90000, 110000, 85000, 120000, 100000],
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' CFA';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

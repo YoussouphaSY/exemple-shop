@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Saisie Inventaire {{ inventaire.nom }} - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-pencil"></i> Saisie Inventaire: {{ inventaire.nom }}</h1>
+    <div>
+        <a href="{% url 'stock:inventaire_detail' inventaire.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <button type="button" class="btn btn-success" onclick="document.getElementById('inventaireForm').submit();">
+            <i class="bi bi-check-circle"></i> Sauvegarder
+        </button>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    <strong>Instructions:</strong> Saisissez les quantités réellement comptées pour chaque produit. Les écarts seront calculés automatiquement.
+</div>
+
+<form method="post" id="inventaireForm">
+    {% csrf_token %}
+    
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-list-ul"></i> Articles à Compter
+                <span class="badge bg-primary ms-2">{{ items.count }} articles</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Barre de recherche -->
+            <div class="mb-3">
+                <input type="text" id="searchProduct" class="form-control" placeholder="Rechercher un produit...">
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Stock Système</th>
+                            <th>Quantité Comptée</th>
+                            <th>Écart</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr class="product-row" data-name="{{ item.produit.nom|lower }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if item.produit.image %}
+                                    <img src="{{ item.produit.image.url }}" alt="{{ item.produit.nom }}" class="img-thumbnail me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ item.produit.nom }}</strong>
+                                        <br><small class="text-muted">{{ item.produit.categorie.nom }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info fs-6">{{ item.quantite_systeme }}</span>
+                            </td>
+                            <td>
+                                <input type="number" 
+                                       name="quantite_{{ item.id }}" 
+                                       value="{{ item.quantite_comptee }}" 
+                                       class="form-control quantite-input" 
+                                       style="width: 100px;"
+                                       data-systeme="{{ item.quantite_systeme }}"
+                                       min="0">
+                            </td>
+                            <td>
+                                <span class="ecart-display badge bg-secondary">0</span>
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="note_{{ item.id }}" 
+                                       value="{{ item.note }}" 
+                                       class="form-control" 
+                                       placeholder="Note optionnelle"
+                                       style="width: 150px;">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <span class="me-3">Progression:</span>
+                        <div class="progress flex-grow-1 me-3" style="height: 25px;">
+                            <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+                        </div>
+                        <span id="progressText">0 / {{ items.count }}</span>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="me-3">Écarts détectés: <span id="ecartsCount" class="badge bg-warning">0</span></span>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Sauvegarder les Quantités
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantiteInputs = document.querySelectorAll('.quantite-input');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const ecartsCount = document.getElementById('ecartsCount');
+    const searchInput = document.getElementById('searchProduct');
+    
+    // Recherche de produits
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('.product-row').forEach(function(row) {
+            const name = row.dataset.name;
+            if (name.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+    
+    // Calcul des écarts et progression
+    function updateCalculations() {
+        let completed = 0;
+        let ecarts = 0;
+        const total = quantiteInputs.length;
+        
+        quantiteInputs.forEach(function(input) {
+            const quantiteComptee = parseInt(input.value) || 0;
+            const quantiteSysteme = parseInt(input.dataset.systeme);
+            const ecart = quantiteComptee - quantiteSysteme;
+            
+            // Mettre à jour l'affichage de l'écart
+            const ecartDisplay = input.closest('tr').querySelector('.ecart-display');
+            if (ecart !== 0) {
+                ecartDisplay.textContent = (ecart > 0 ? '+' : '') + ecart;
+                ecartDisplay.className = 'ecart-display badge ' + (ecart > 0 ? 'bg-success' : 'bg-danger');
+                ecarts++;
+            } else {
+                ecartDisplay.textContent = '0';
+                ecartDisplay.className = 'ecart-display badge bg-secondary';
+            }
+            
+            // Compter les articles saisis
+            if (input.value !== '') {
+                completed++;
+            }
+        });
+        
+        // Mettre à jour la progression
+        const percentage = Math.round((completed / total) * 100);
+        progressBar.style.width = percentage + '%';
+        progressBar.textContent = percentage + '%';
+        progressText.textContent = completed + ' / ' + total;
+        
+        // Mettre à jour le compteur d'écarts
+        ecartsCount.textContent = ecarts;
+        ecartsCount.className = 'badge ' + (ecarts > 0 ? 'bg-warning' : 'bg-success');
+    }
+    
+    // Événements sur les inputs
+    quantiteInputs.forEach(function(input) {
+        input.addEventListener('input', updateCalculations);
+        
+        // Focus sur l'input suivant avec Enter
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const currentIndex = Array.from(quantiteInputs).indexOf(this);
+                const nextInput = quantiteInputs[currentIndex + 1];
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                }
+            }
+        });
+    });
+    
+    // Calcul initial
+    updateCalculations();
+    
+    // Auto-save toutes les 30 secondes
+    setInterval(function() {
+        const form = document.getElementById('inventaireForm');
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        }).then(response => {
+            if (response.ok) {
+                // Afficher un indicateur de sauvegarde
+                const indicator = document.createElement('div');
+                indicator.className = 'alert alert-success position-fixed top-0 end-0 m-3';
+                indicator.style.zIndex = '9999';
+                indicator.innerHTML = '<i class="bi bi-check-circle"></i> Sauvegarde automatique';
+                document.body.appendChild(indicator);
+                
+                setTimeout(() => indicator.remove(), 2000);
+            }
+        });
+    }, 30000);
+});
+</script>
+{% endblock %}

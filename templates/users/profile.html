@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Mon Profil - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-gear"></i> Mon Profil</h1>
+    <a href="{% url 'dashboard:index' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Informations Personnelles
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Mettre à Jour
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-person-badge"></i> Informations Compte</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Nom d'utilisateur:</th>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Rôle:</th>
+                        <td>
+                            <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'manager' %}bg-warning{% else %}bg-info{% endif %}">
+                                {{ user.get_role_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Membre depuis:</th>
+                        <td>{{ user.date_creation|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Dernière connexion:</th>
+                        <td>{{ user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-shield-check"></i> Sécurité</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-warning">
+                        <i class="bi bi-key"></i> Changer le Mot de Passe
+                    </a>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-danger">
+                        <i class="bi bi-box-arrow-right"></i> Se Déconnecter
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistiques utilisateur -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Mes Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ user.ventes_count|default:0 }}</h4>
+                        <small class="text-muted">Ventes</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ user.ca_total|default:0|floatformat:0 }}</h4>
+                        <small class="text-muted">CFA CA</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

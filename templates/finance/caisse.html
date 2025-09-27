@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% load humanize %}
+
+{% block title %}Caisse - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-wallet"></i> Gestion de la Caisse</h1>
+    <div>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'finance:mouvement_caisse' %}" class="btn btn-primary">
+            <i class="bi bi-arrow-repeat" style="color: black;"></i> Mouvement de Caisse
+        </a>
+        {% endif %}
+        <a href="{% url 'finance:overview' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour Finance
+        </a>
+    </div>
+</div>
+
+<!-- Solde actuel -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h2>Solde en Caisse</h2>
+                <h1 class="display-4">{{ solde_caisse|floatformat:0|intcomma }} CFA</h1>
+                <p class="mb-0">Dernière mise à jour: {% now "d/m/Y H:i" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mouvements récents -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0"><i class="bi bi-clock-history p-2" style="color: black;"></i> Mouvements Récents</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Montant</th>
+                        <th>Solde Avant</th>
+                        <th>Solde Après</th>
+                        <th>Utilisateur</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mouvement in mouvements_recents %}
+                    <tr>
+                        <td>
+                            <small>{{ mouvement.date|date:"d/m/Y" }}</small><br>
+                            <small class="text-muted">{{ mouvement.date|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <span class="badge {% if mouvement.type in 'ouverture,approvisionnement' %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ mouvement.get_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="{% if mouvement.type in 'ouverture,approvisionnement' %}text-success{% else %}text-warning{% endif %}">
+                                {% if mouvement.type in 'ouverture,approvisionnement' %}+{% else %}-{% endif %}{{ mouvement.montant|floatformat:0|intcomma }} CFA
+                            </span>
+                        </td>
+                        <td>{{ mouvement.montant_avant|floatformat:0|intcomma }} CFA</td>
+                        <td><strong>{{ mouvement.montant_apres|floatformat:0|intcomma }} CFA</strong></td>
+                        <td>
+                            {% if mouvement.utilisateur %}
+                            {{ mouvement.utilisateur.get_full_name|default:mouvement.utilisateur.username }}
+                            {% else %}
+                            <span class="text-muted">Système</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mouvement.note %}
+                            <small class="text-muted">{{ mouvement.note|truncatechars:30 }}</small>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-wallet" style="font-size: 2rem;"></i>
+                            <br>Aucun mouvement de caisse
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Actions rapides -->
+{% if user.role in 'admin,manager' %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-door-open" style="font-size: 2rem; color: var(--primary-color);"></i>
+                <h5 class="card-title mt-2">Ouverture</h5>
+                <p class="card-text">Ouvrir la caisse en début de journée</p>
+                <a href="{% url 'finance:mouvement_caisse' %}?type=ouverture" class="btn btn-outline-primary">
+                    Ouvrir Caisse
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-plus-circle" style="font-size: 2rem; color: var(--success-color);"></i>
+                <h5 class="card-title mt-2">Approvisionnement</h5>
+                <p class="card-text">Ajouter des fonds à la caisse</p>
+                <a href="{% url 'finance:mouvement_caisse' %}?type=approvisionnement" class="btn btn-outline-success">
+                    Approvisionner
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-dash-circle" style="font-size: 2rem; color: var(--warning-color);"></i>
+                <h5 class="card-title mt-2">Retrait</h5>
+                <p class="card-text">Retirer des fonds de la caisse</p>
+                <a href="{% url 'finance:mouvement_caisse' %}?type=retrait" class="btn btn-outline-warning">
+                    Effectuer Retrait
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-door-closed" style="font-size: 2rem; color: var(--danger-color);"></i>
+                <h5 class="card-title mt-2">Fermeture</h5>
+                <p class="card-text">Fermer la caisse en fin de journée</p>
+                <a href="{% url 'finance:mouvement_caisse' %}?type=fermeture" class="btn btn-outline-danger">
+                    Fermer Caisse
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Connexion - Shop360{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="modern-card shadow-lg">
+                    <div class="card-header text-center" style="background: linear-gradient(90deg, #D4AF37, #B8860B); color: #1a1a1a;">
+                        <h2 class="mb-2">🇸🇳 Shop360</h2>
+                        <p class="mb-0">Gestion de Boutique</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <h4 class="text-center mb-4" style="color: #D4AF37;">Connexion</h4>
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Nom d'utilisateur ou mot de passe incorrect.
+                        </div>
+                        {% endif %}
+                        
+                        <form method="post" class="modern-form">
+                            {% csrf_token %}
+                            
+                            <div class="input-group-modern">
+                                {{ form.username }}
+                                <label>Nom d'utilisateur</label>
+                            </div>
+                            
+                            <div class="input-group-modern">
+                                {{ form.password }}
+                                <label>Mot de passe</label>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-box-arrow-in-right"></i> Se Connecter
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check"></i>
+                            Connexion sécurisée - Shop360
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+body {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.modern-card {
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.input-group-modern {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-group-modern input {
+    border: 2px solid #e9ecef;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.input-group-modern input:focus {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.15);
+    outline: none;
+}
+
+.input-group-modern label {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    background: white;
+    padding: 0 0.5rem;
+}
+
+.input-group-modern input:focus + label,
+.input-group-modern input:not(:placeholder-shown) + label {
+    top: -0.5rem;
+    left: 0.75rem;
+    font-size: 0.875rem;
+    color: #D4AF37;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #D4AF37, #B8860B);
+    border: none;
+    color: #1a1a1a;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #B8860B, #8B7355);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+}
+</style>
+{% endblock %}

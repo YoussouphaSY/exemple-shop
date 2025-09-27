@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% block title %}Budgets - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-clipboard-data"></i> Gestion des Budgets</h1>
+    {% if user.role in 'admin,manager' %}
+    <a href="{% url 'finance:budget_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau Budget
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% for budget in budgets %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clipboard-data"></i> {{ budget.nom }}
+                    {% if budget.actif %}
+                    <span class="badge bg-success ms-2">Actif</span>
+                    {% else %}
+                    <span class="badge bg-secondary ms-2">Inactif</span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if budget.description %}
+                <p class="card-text">{{ budget.description|truncatechars:80 }}</p>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <small>Progression</small>
+                        <small>{{ budget.pourcentage_realise|floatformat:0 }}%</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar {% if budget.pourcentage_realise > 100 %}bg-danger{% elif budget.pourcentage_realise > 80 %}bg-warning{% else %}bg-success{% endif %}" 
+                             style="width: {{ budget.pourcentage_realise|floatformat:0 }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h5 class="text-primary">{{ budget.montant_prevu|floatformat:0 }}</h5>
+                        <small class="text-muted">CFA Prévu</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="{% if budget.montant_realise > budget.montant_prevu %}text-danger{% else %}text-success{% endif %}">
+                            {{ budget.montant_realise|floatformat:0 }}
+                        </h5>
+                        <small class="text-muted">CFA Réalisé</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-center">
+                    <h6 class="{% if budget.ecart < 0 %}text-danger{% else %}text-success{% endif %}">
+                        Écart: {{ budget.ecart|floatformat:0 }} CFA
+                    </h6>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group">
+                        <a href="{% url 'finance:budget_detail' budget.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Voir
+                        </a>
+                        {% if user.role in 'admin,manager' %}
+                        <a href="{% url 'finance:budget_edit' budget.pk %}" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        {% endif %}                        
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    {{ budget.periode_debut|date:"d/m/Y" }} - {{ budget.periode_fin|date:"d/m/Y" }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-clipboard-data" style="font-size: 4rem; color: #dee2e6;"></i>
+            <h3 class="text-muted mt-3">Aucun budget</h3>
+            <p class="text-muted">Commencez par créer votre premier budget.</p>
+            {% if user.role in 'admin,manager' %}
+            <a href="{% url 'finance:budget_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Créer un Budget
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

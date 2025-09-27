@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% load humanize %}
+
+{% block title %}{{ produit.nom }} - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-box"></i> {{ produit.nom }}</h1>
+    <div>
+        <a href="{% url 'produits:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'produits:edit' produit.slug %}" class="btn btn-warning">
+            <i class="bi bi-pencil" style="color: black;"></i> Modifier
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-image" style="color: black;"></i> Image</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if produit.image %}
+                <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-fluid rounded">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle p-2" style="color: black;"></i> Informations Produit</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Nom:</th>
+                                <td>{{ produit.nom }}</td>
+                            </tr>
+                            <tr>
+                                <th>Catégorie:</th>
+                                <td><span class="badge bg-info">{{ produit.categorie.nom }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Prix d'achat:</th>
+                                <td>{{ produit.prix_achat|intcomma }}FCFA</td>
+                            </tr>
+                            <tr>
+                                <th>Prix de vente:</th>
+                                <td><strong class="text-success">{{ produit.prix_vente|intcomma }}FCFA</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Marge:</th>
+                                <td>
+                                    <span class="text-success">{{ produit.benefice_unitaire|intcomma }}FCFA</span>
+                                    <small class="text-muted">({{ produit.marge_pourcentage|floatformat:1 }}%)</small>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Stock actuel:</th>
+                                <td>
+                                    <span class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %} fs-6">
+                                        {{ produit.quantite_stock }} unités
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Seuil d'alerte:</th>
+                                <td>{{ produit.seuil_alerte }} unités</td>
+                            </tr>
+                            <tr>
+                                <th>Date d'ajout:</th>
+                                <td>{{ produit.date_ajout|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Statut:</th>
+                                <td>
+                                    {% if produit.actif %}
+                                    <span class="badge bg-success">Actif</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if produit.description %}
+                <div class="mt-3">
+                    <h6>Description:</h6>
+                    <p class="text-muted">{{ produit.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mouvements de stock récents -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0"><i class="bi bi-arrow-repeat p-2" style="color: black;"></i> Mouvements de Stock Récents</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Quantité</th>
+                        <th>Source</th>
+                        <th>Utilisateur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mouvement in produit.mouvements.all|slice:":10" %}
+                    <tr>
+                        <td>{{ mouvement.date|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <span class="badge {% if mouvement.type == 'ENTREE' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ mouvement.get_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if mouvement.type == 'ENTREE' %}+{% else %}-{% endif %}{{ mouvement.quantite }}
+                        </td>
+                        <td>{{ mouvement.get_source_display }}</td>
+                        <td>{{ mouvement.utilisateur.get_full_name|default:mouvement.utilisateur.username }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Aucun mouvement de stock</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if produit.mouvements.count > 10 %}
+        <div class="text-center">
+            <a href="{% url 'stock:mouvements' %}?produit={{ produit.id }}" class="btn btn-outline-primary btn-sm">
+                Voir tous les mouvements
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

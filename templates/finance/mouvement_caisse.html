@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load math_filters %}
+{% load humanize %}
+
+{% block title %}Mouvement de Caisse - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-arrow-repeat"></i> Mouvement de Caisse</h1>
+    <a href="{% url 'finance:caisse' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour Caisse
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-plus-circle p-2" style="color: black;"></i> Nouveau Mouvement
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Solde actuel en caisse:</strong> {{ solde_actuel|intcomma }} CFA
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="mt-3 d-flex justify-content-between">
+                        <a href="{% url 'finance:caisse' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle" style="color: black;"></i> Valider le mouvement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle p-2" style="color: black;"></i> Types de Mouvements</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><span class="badge bg-success">Ouverture</span></h6>
+                    <small class="text-muted">Ouverture de caisse en début de journée avec le fond de caisse</small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><span class="badge bg-info">Approvisionnement</span></h6>
+                    <small class="text-muted">Ajout de fonds supplémentaires dans la caisse</small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><span class="badge bg-warning">Retrait</span></h6>
+                    <small class="text-muted">Retrait de fonds de la caisse (dépôt en banque, etc.)</small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><span class="badge bg-danger">Fermeture</span></h6>
+                    <small class="text-muted">Fermeture de caisse en fin de journée</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-clock-history p-2" style="color: black;"></i> Dernier Mouvement</h5>
+            </div>
+            <div class="card-body">
+                {% if dernier_mouvement %}
+                <p><strong>Type:</strong> {{ dernier_mouvement.get_type_display }}</p>
+                <p><strong>Montant:</strong> {{ dernier_mouvement.montant|floatformat:0 }} CFA</p>
+                <p><strong>Date:</strong> {{ dernier_mouvement.date|date:"d/m/Y H:i" }}</p>
+                <p><strong>Par:</strong> {{ dernier_mouvement.utilisateur.get_full_name|default:dernier_mouvement.utilisateur.username }}</p>
+                {% else %}
+                <p class="text-muted">Aucun mouvement récent</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('id_type');
+    const montantInput = document.getElementById('id_montant');
+    
+    // Convertir le solde en nombre JS
+    const soldeActuel = parseFloat("{{ solde_actuel|default:0}}");
+
+    function updateValidation() {
+        const type = typeSelect.value;
+        const montant = parseFloat(montantInput.value) || 0;
+        
+        // Validation pour les retraits et fermetures
+        if ((type === 'retrait' || type === 'fermeture') && montant > soldeActuel) {
+            montantInput.setCustomValidity('Le montant ne peut pas être supérieur au solde en caisse');
+        } else {
+            montantInput.setCustomValidity('');
+        }
+    }
+    
+    typeSelect.addEventListener('change', updateValidation);
+    montantInput.addEventListener('input', updateValidation);
+});
+</script>
+
+{% endblock %}

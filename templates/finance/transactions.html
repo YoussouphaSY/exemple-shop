@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-list-ul"></i> Transactions Financières</h1>
+    <div>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'finance:transaction_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvelle Transaction
+        </a>
+        {% endif %}
+        <a href="{% url 'finance:export' %}" class="btn btn-outline-primary">
+            <i class="bi bi-download"></i> Exporter
+        </a>
+    </div>
+</div>
+
+<!-- Résumé des transactions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Recettes</h6>
+                        <h4>{{ total_recettes|floatformat:0 }} CFA</h4>
+                    </div>
+                    <i class="bi bi-arrow-up-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Dépenses</h6>
+                        <h4>{{ total_depenses|floatformat:0 }} CFA</h4>
+                    </div>
+                    <i class="bi bi-arrow-down-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Solde Net</h6>
+                        <h4>{{ total_recettes|add:total_depenses|floatformat:0 }} CFA</h4>
+                    </div>
+                    <i class="bi bi-wallet2" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Type</label>
+                <select name="type" class="form-select">
+                    <option value="">Tous les types</option>
+                    {% for value, label in types %}
+                    <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Catégorie</label>
+                <select name="categorie" class="form-select">
+                    <option value="">Toutes les catégories</option>
+                    {% for value, label in categories %}
+                    <option value="{{ value }}" {% if request.GET.categorie == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date début</label>
+                <input type="date" name="date_debut" class="form-control" value="{{ request.GET.date_debut }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date fin</label>
+                <input type="date" name="date_fin" class="form-control" value="{{ request.GET.date_fin }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des transactions -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list"></i> Liste des Transactions
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Catégorie</th>
+                        <th>Montant</th>
+                        <th>Utilisateur</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>
+                            <small>{{ transaction.date|date:"d/m/Y" }}</small><br>
+                            <small class="text-muted">{{ transaction.date|date:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ transaction.description|truncatechars:40 }}</strong>
+                            {% if transaction.vente %}
+                            <br><small class="text-muted">Vente: {{ transaction.vente.numero }}</small>
+                            {% elif transaction.achat %}
+                            <br><small class="text-muted">Achat: {{ transaction.achat.numero }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if transaction.type == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ transaction.get_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ transaction.get_categorie_display }}</span>
+                        </td>
+                        <td>
+                            <span class="{% if transaction.type == 'RECETTE' %}text-success{% else %}text-danger{% endif %}">
+                                {% if transaction.type == 'RECETTE' %}+{% else %}-{% endif %}{{ transaction.montant|floatformat:0 }} CFA
+                            </span>
+                        </td>
+                        <td>
+                            {% if transaction.utilisateur %}
+                            {{ transaction.utilisateur.get_full_name|default:transaction.utilisateur.username }}
+                            {% else %}
+                            <span class="text-muted">Système</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'finance:transaction_detail' transaction.pk %}" class="btn btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.role in 'admin,manager' %}
+                                <a href="{% url 'finance:transaction_edit' transaction.pk %}" class="btn btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-list-ul" style="font-size: 2rem;"></i>
+                            <br>Aucune transaction trouvée
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination transactions" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Premier</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Dernier</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

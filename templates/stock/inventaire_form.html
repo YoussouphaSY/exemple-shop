@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if object %}Modifier Inventaire {{ object.nom }}{% else %}Nouvel Inventaire{% endif %} - Shop360
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-{% if object %}pencil{% else %}plus-circle{% endif %}"></i>
+        {% if object %}Modifier Inventaire {{ object.nom }}{% else %}Nouvel Inventaire{% endif %}
+    </h1>
+    <a href="{% url 'stock:inventaire_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi p-2 bi-info-circle" style="color: black;"></i> Informations de l'Inventaire
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle" style="color: black;"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} l'Inventaire
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-lightbulb" style="color: black;"></i> Aide</h5>
+            </div>
+            <div class="card-body">
+                <h6>Processus d'inventaire :</h6>
+                <ol class="small">
+                    <li>Créer l'inventaire</li>
+                    <li>Compter physiquement les produits</li>
+                    <li>Saisir les quantités comptées</li>
+                    <li>Vérifier les écarts</li>
+                    <li>Clôturer l'inventaire</li>
+                </ol>
+                
+                <hr>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <small>
+                        Lors de la création, tous les produits actifs seront automatiquement ajoutés à l'inventaire avec leur stock système actuel.
+                    </small>
+                </div>
+                
+                {% if object %}
+                <hr>
+                <h6>Informations</h6>
+                <small class="text-muted">
+                    <strong>Créé le:</strong> {{ object.date_creation|date:"d/m/Y H:i" }}<br>
+                    <strong>Articles:</strong> {{ object.items.count }}<br>
+                    <strong>Statut:</strong> {% if object.clos %}Clos{% else %}En cours{% endif %}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

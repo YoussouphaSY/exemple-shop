@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Modifier {{ user_obj.get_full_name|default:user_obj.username }} - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-pencil"></i> Modifier {{ user_obj.get_full_name|default:user_obj.username }}
+    </h1>
+    <a href="{% url 'users:user_detail' user_obj.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Informations de l'Utilisateur
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Mettre à Jour
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-person-badge"></i> Informations Actuelles</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="avatar-circle mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                    <i class="bi bi-person"></i>
+                </div>
+                
+                <h5>{{ user_obj.get_full_name|default:user_obj.username }}</h5>
+                <p class="text-muted">@{{ user_obj.username }}</p>
+                
+                <span class="badge {% if user_obj.role == 'admin' %}bg-danger{% elif user_obj.role == 'manager' %}bg-warning{% else %}bg-info{% endif %}">
+                    {{ user_obj.get_role_display }}
+                </span>
+                
+                <hr>
+                
+                <small class="text-muted">
+                    <strong>Membre depuis:</strong> {{ user_obj.date_creation|date:"d/m/Y" }}<br>
+                    <strong>Dernière connexion:</strong> {{ user_obj.last_login|date:"d/m/Y H:i"|default:"Jamais" }}
+                </small>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-shield-check"></i> Rôles et Permissions</h5>
+            </div>
+            <div class="card-body">
+                <h6>Rôles disponibles :</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <span class="badge bg-danger">Admin</span> : Accès complet
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge bg-warning">Gestionnaire</span> : Gestion produits/stocks
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge bg-info">Caissier</span> : Ventes uniquement
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle {
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary-color);
+}
+</style>
+{% endblock %}

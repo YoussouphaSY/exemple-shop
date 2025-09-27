@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% block title %}Analytics - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-graph-up-arrow"></i> Analytics Avancées</h1>
+    <div>
+        <button class="btn btn-outline-primary" onclick="refreshData()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+        </button>
+        <a href="{% url 'dashboard:index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Période de sélection -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Période</label>
+                <select name="periode" class="form-select" onchange="this.form.submit()">
+                    <option value="7" {% if request.GET.periode == '7' %}selected{% endif %}>7 derniers jours</option>
+                    <option value="30" {% if request.GET.periode == '30' %}selected{% endif %}>30 derniers jours</option>
+                    <option value="90" {% if request.GET.periode == '90' %}selected{% endif %}>3 derniers mois</option>
+                    <option value="365" {% if request.GET.periode == '365' %}selected{% endif %}>12 derniers mois</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date début</label>
+                <input type="date" name="date_debut" class="form-control" value="{{ request.GET.date_debut }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date fin</label>
+                <input type="date" name="date_fin" class="form-control" value="{{ request.GET.date_fin }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Analyser
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Métriques avancées -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ stats_ventes.panier_moyen|floatformat:0 }}</div>
+            <div class="metric-label">FCFA Panier Moyen</div>
+            <div class="metric-change positive">
+                <i class="bi bi-arrow-up"></i> +12.5%
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ stats_ventes.ca_moyen|floatformat:0 }}</div>
+            <div class="metric-label">FCFA CA Moyen/Jour</div>
+            <div class="metric-change positive">
+                <i class="bi bi-arrow-up"></i> +8.3%
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ conversion_rate|floatformat:1 }}</div>
+            <div class="metric-label">% Taux Conversion</div>
+            <div class="metric-change negative">
+                <i class="bi bi-arrow-down"></i> -2.1%
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ retention_rate|floatformat:1 }}</div>
+            <div class="metric-label">% Fidélisation</div>
+            <div class="metric-change positive">
+                <i class="bi bi-arrow-up"></i> +5.7%
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques avancés -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-2"><i class="bi p-2 bi-graph-up"></i> Performance Mensuelle</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-2"><i class="bi p-2 bi-pie-chart"></i> Répartition CA</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top produits -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="modern-table">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-2"><i class="bi p-2 bi-trophy"></i> Top Produits Performance</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Produit</th>
+                            <th>Quantité Vendue</th>
+                            <th>CA Généré</th>
+                            <th>Nb Ventes</th>
+                            <th>Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produit in produits_performance %}
+                        <tr>
+                            <td>
+                                <span class="badge {% if forloop.counter <= 3 %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    #{{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ produit.produit__nom }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ produit.quantite }}</span>
+                            </td>
+                            <td class="montant-cfa">{{ produit.ca|floatformat:0 }}</td>
+                            <td>{{ produit.nb_ventes }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar" style="width: {{ produit.ca|percentage:max_ca }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Performance chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    const performanceData = {{ performance_mensuelle_json|safe }};
+    
+    new Chart(performanceCtx, {
+        type: 'line',
+        data: {
+            labels: performanceData.map(item => item.mois),
+            datasets: [{
+                label: 'Chiffre d\'affaires',
+                data: performanceData.map(item => item.ca),
+                borderColor: '#D4AF37',
+                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#D4AF37',
+                pointBorderColor: '#B8860B',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' FCFA';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Revenue distribution chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    
+    new Chart(revenueCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Téléphones', 'Accessoires', 'Tablettes', 'Autres'],
+            datasets: [{
+                data: [45, 30, 15, 10],
+                backgroundColor: [
+                    '#28a745',
+                    '#ffc107',
+                    '#dc3545',
+                    '#8B7355'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+
+function refreshData() {
+    location.reload();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Utilisateurs - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-badge"></i> Gestion des Utilisateurs</h1>
+    {% if user.role == 'admin' %}
+    <a href="{% url 'users:register' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus" style="color: black;"></i> Nouvel Utilisateur
+    </a>
+    {% endif %}
+</div>
+
+<!-- Statistiques des utilisateurs -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Utilisateurs</h6>
+                        <h4>{{ users.count }}</h4>
+                    </div>
+                    <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Administrateurs</h6>
+                        <h4>{{ admins_count|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-shield-check" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Gestionnaires</h6>
+                        <h4>{{ managers_count|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-person-gear" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Caissiers</h6>
+                        <h4>{{ cashiers_count|default:0 }}</h4>
+                    </div>
+                    <i class="bi bi-cash-coin" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des utilisateurs -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list p-2" style="color: black;"></i> Liste des Utilisateurs
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Rôle</th>
+                        <th>Statut</th>
+                        <th>Dernière Connexion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_obj in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2">
+                                    <i class="bi bi-person" style="color: black;"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ user_obj.get_full_name|default:user_obj.username }}</strong>
+                                    <br><small class="text-muted">@{{ user_obj.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user_obj.email }}</td>
+                        <td>{{ user_obj.telephone|default:"N/A" }}</td>
+                        <td>
+                            <span class="badge {% if user_obj.role == 'admin' %}bg-danger{% elif user_obj.role == 'manager' %}bg-warning{% else %}bg-info{% endif %}">
+                                {{ user_obj.get_role_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if user_obj.is_active %}
+                            <span class="badge bg-success">Actif</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user_obj.last_login %}
+                            {{ user_obj.last_login|date:"d/m/Y H:i" }}
+                            {% else %}
+                            <span class="text-muted">Jamais</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'users:user_detail' user_obj.pk %}" class="btn btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.role == 'admin' %}
+                                <a href="{% url 'users:user_edit' user_obj.pk %}" class="btn btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-people" style="font-size: 2rem;"></i>
+                            <br>Aucun utilisateur trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination utilisateurs" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Premier</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernier</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary-color);
+    font-size: 1.2rem;
+}
+</style>
+{% endblock %}

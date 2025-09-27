@@ -1,0 +1,556 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% load humanize %}
+
+{% block title %}Dashboard - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+        </button>
+        <a href="{% url 'dashboard:analytics' %}" class="btn btn-outline-info">
+            <i class="bi bi-graph-up-arrow"></i> Analytics
+        </a>
+    </div>
+</div>
+
+<!-- Key Performance Indicators -->
+<div class="responsive-grid mb-4">
+    <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="metric-value">{{ ca_aujourd_hui|floatformat:0|intcomma}}</div>
+                <div class="metric-label">CA Aujourd'hui</div>
+                <div class="metric-change {% if croissance_ca >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="bi bi-arrow-{% if croissance_ca >= 0 %}up{% else %}down{% endif %}"></i>
+                    {{ croissance_ca|floatformat:1 }}% vs hier
+                </div>
+            </div>
+            <div class="widget-icon">
+                <i class="bi bi-cash-stack" style="color: black;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="metric-value">{{ ventes_aujourd_hui }}</div>
+                <div class="metric-label">Ventes Aujourd'hui</div>
+                <div class="metric-change positive">
+                    <i class="bi bi-arrow-up"></i>
+                    CA Mois: {{ ca_mois|floatformat:0|intcomma }} FCFA
+                </div>
+            </div>
+            <div class="widget-icon">
+                <i class="bi bi-cart3" style="color: black;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="metric-value">{{ stock_total }}</div>
+                <div class="metric-label">Articles en Stock</div>
+                <div class="metric-change">
+                    Valeur: {{ valeur_stock|floatformat:0|intcomma }} FCFA
+                </div>
+            </div>
+            <div class="widget-icon">
+                <i class="bi bi-boxes" style="color: black;"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="metric-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="metric-value {% if stock_critique > 0 %}text-warning{% else %}text-success{% endif %}">{{ stock_critique }}</div>
+                <div class="metric-label">Stock Critique</div>
+                <div class="metric-change {% if stock_critique > 0 %}negative{% else %}positive{% endif %}">
+                    {% if stock_critique > 0 %}
+                    <i class="bi bi-exclamation-triangle"></i> Action requise
+                    {% else %}
+                    <i class="bi bi-check-circle"></i> Tout va bien
+                    {% endif %}
+                </div>
+            </div>
+            <div class="widget-icon">
+                <i class="bi bi-exclamation-triangle" style="color: black;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertes importantes -->
+{% if stock_critique > 0 %}
+<div class="modern-alert alert-warning mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Attention !</strong> {{ stock_critique }} produit{{ stock_critique|pluralize }} en stock critique.
+        </div>
+        <a href="{% url 'stock:list' %}" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-eye" style="color: black;"></i> Voir les détails
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="modern-card">
+            <div class="card-header px-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title py-2"><i class="bi p-3 bi-graph-up" style="color: black;"></i> Évolution des ventes (7 derniers jours)</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary active" onclick="changeChartPeriod(7)">7J</button>
+                        <button class="btn btn-outline-primary" onclick="changeChartPeriod(30)">30J</button>
+                        <button class="btn btn-outline-primary" onclick="changeChartPeriod(90)">3M</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-1"><i class="bi p-3 bi-bar-chart" style="color: black;"></i> Ventes par catégorie</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 10px;">
+        <div class="modern-card ">
+            <div class="card-header">
+                <h5 class="card-title mb-0  py-1"><i class="bi p-3 bi-bar-chart" style="color: black;"></i> Recettes vs Dépenses</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Tables Section -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="modern-table">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-1"><i class="bi p-3 bi-trophy" style="color: black;"></i> Top Produits du Mois</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Produit</th>
+                            <th>Vendu</th>
+                            <th>CA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produit in top_produits %}
+                        <tr>
+                            <td>
+                                <span class="badge {% if forloop.counter <= 3 %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    #{{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ produit.produit__nom|truncatechars:25 }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ produit.total_vendu }}</span>
+                            </td>
+                            <td class="montant-cfa">{{ produit.ca|floatformat:0|intcomma|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-muted text-center">Aucune vente ce mois</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="modern-table">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-1"><i class="bi p-3 bi-clock-history" style="color: black;"></i> Activité Récente</h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                <div class="list-group list-group-flush">
+                    {% for vente in ventes_recentes %}
+                    <div class="list-group-item border-10 px-3">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <i class="bi bi-cart3 text-success"></i>
+                                Vente {{ vente.numero }}
+                            </h6>
+                            <small>{{ vente.date_vente|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1">{{ vente.total_ttc|floatformat:0|intcomma }} FCFA - {{ vente.client|default:"Client anonyme" }}</p>
+                        <small>Par {{ vente.vendeur.get_full_name|default:vente.vendeur.username }}</small>
+                    </div>
+                    {% endfor %}
+                    
+                    {% for achat in achats_recents %}
+                    <div class="list-group-item border-10 px-3">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <i class="bi bi-truck text-info"></i>
+                                Achat {{ achat.numero }}
+                            </h6>
+                            <small>{{ achat.date_achat|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1">{{ achat.total_ttc|floatformat:0|intcomma|intcomma}} FCFA - {{ achat.fournisseur.nom }}</p>
+                        <small>Statut: {{ achat.get_statut_display }}</small>
+                    </div>
+                    {% endfor %}
+                    
+                    {% for mouvement in mouvements_recents %}
+                    <div class="list-group-item border-10 px-3">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <i class="bi bi-arrow-repeat text-warning"></i>
+                                Mouvement Stock
+                            </h6>
+                            <small>{{ mouvement.date|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1">{{ mouvement.produit.nom }} - {{ mouvement.get_type_display }}</p>
+                        <small>{{ mouvement.quantite }} unités{% if mouvement.utilisateur %} par {{ mouvement.utilisateur.username }}{% endif %}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="modern-card">
+    <div class="card-header mb-1">
+        <h5 class="card-title mb-0  py-1"><i class="bi p-3 bi-lightning" style="color: black;"></i> Actions Rapides</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-3 mt-10">
+                <a href="{% url 'ventes:caisse' %}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                    <i class="bi bi-cart-plus" style="font-size: 2rem; color: black;"></i>
+                    <span class="mt-2" style="color: ;">Nouvelle Vente</span>
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'produits:create' %}" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                    <i class="bi bi-plus-circle" style="font-size: 2rem; color: black;"></i>
+                    <span class="mt-2">Ajouter Produit</span>
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'achats:create' %}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center border-2 p-3">
+                    <i class="bi bi-bag-plus" style="font-size: 2rem; color: black;"></i>
+                    <span class="mt-2">Nouvel Achat</span>
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'stock:ajustement' %}" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                    <i class="bi bi-sliders" style="font-size: 2rem; color: black;"></i>
+                    <span class="mt-2">Ajuster Stock</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<button class="fab" onclick="showQuickActions()" title="Actions rapides">
+    <i class="bi bi-plus" style="font-size: 1.5rem;"></i>
+</button>
+
+<!-- Quick Actions Menu -->
+<div class="quick-actions" id="quickActions" style="display: none;">
+    <button class="quick-action-btn" onclick="location.href='{% url 'ventes:caisse' %}'" title="Nouvelle vente">
+        <i class="bi bi-cart-plus"></i>
+    </button>
+    <button class="quick-action-btn" onclick="location.href='{% url 'produits:create' %}'" title="Ajouter produit">
+        <i class="bi bi-plus-circle"></i>
+    </button>
+    <button class="quick-action-btn" onclick="location.href='{% url 'achats:create' %}'" title="Nouvel achat">
+        <i class="bi bi-truck"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sales chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const salesData = {{ ventes_semaine_json|safe }};
+    
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: salesData.map(item => item.date),
+            datasets: [{
+                label: 'Chiffre d\'affaires',
+                data: salesData.map(item => item.ca),
+                borderColor: '#D4AF37',
+                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#D4AF37',
+                pointBorderColor: '#B8860B',
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                    titleColor: '#D4AF37',
+                    bodyColor: '#ffffff',
+                    borderColor: '#D4AF37',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(212, 175, 55, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' FCFA';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(212, 175, 55, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Category chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryData = {{ ventes_par_categorie_json|safe }};
+    
+    if (categoryData.length > 0) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.map(item => item.categorie),
+                datasets: [{
+                    data: categoryData.map(item => item.total),
+                    backgroundColor: [
+                        '#28a745',
+                        '#17a2b8',
+                        '#dc3545',
+                        '#8B7355',
+                        '#28a745',
+                        '#17a2b8'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                        titleColor: '#D4AF37',
+                        bodyColor: '#ffffff',
+                        borderColor: '#D4AF37',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed.toLocaleString() + ' FCFA';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        categoryCtx.canvas.parentNode.innerHTML = '<div class="empty-state"><p>Pas de données à afficher</p></div>';
+    }
+    
+    // Financial evolution chart
+    const financeCtx = document.getElementById('financeChart').getContext('2d');
+    const financeData = {{ finance_evolution_json|safe }};
+    
+    new Chart(financeCtx, {
+        type: 'bar',
+        data: {
+            labels: financeData.map(item => item.date),
+            datasets: [{
+                label: 'Recettes',
+                data: financeData.map(item => item.recettes),
+                backgroundColor: '#28a745',
+                borderColor: '#28a745',
+                borderWidth: 1
+            }, {
+                label: 'Dépenses',
+                data: financeData.map(item => item.depenses),
+                backgroundColor: '#dc3545',
+                borderColor: '#dc3545',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' FCFA';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Auto-refresh toutes les 5 minutes
+    setInterval(function() {
+        updateDashboardData();
+    }, 300000);
+});
+
+function showQuickActions() {
+    const quickActions = document.getElementById('quickActions');
+    const isVisible = quickActions.style.display !== 'none';
+    
+    if (isVisible) {
+        quickActions.style.display = 'none';
+    } else {
+        quickActions.style.display = 'flex';
+        quickActions.classList.add('slide-in');
+    }
+}
+
+function changeChartPeriod(days) {
+    // Mettre à jour les boutons actifs
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Ici vous pourriez faire un appel AJAX pour récupérer les nouvelles données
+    showNotification(`Période changée: ${days} jours`, 'info');
+}
+
+function updateDashboardData() {
+    // Appel AJAX pour mettre à jour les données
+    fetch('/api/dashboard/stats/')
+        .then(response => response.json())
+        .then(data => {
+            // Mettre à jour les KPI
+            updateKPIs(data);
+        })
+        .catch(error => {
+            console.error('Erreur lors de la mise à jour:', error);
+        });
+}
+
+function updateKPIs(data) {
+    // Mettre à jour les valeurs des KPI avec animation
+    const kpis = document.querySelectorAll('.metric-value');
+    kpis.forEach((kpi, index) => {
+        kpi.classList.add('fade-in');
+    });
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification alert alert-${type}`;
+    notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Raccourcis clavier
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'n':
+                e.preventDefault();
+                location.href = '{% url "ventes:caisse" %}';
+                break;
+            case 'p':
+                e.preventDefault();
+                location.href = '{% url "produits:create" %}';
+                break;
+            case 'a':
+                e.preventDefault();
+                location.href = '{% url "achats:create" %}';
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

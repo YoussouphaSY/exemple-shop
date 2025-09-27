@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% load humanize %}
+
+{% block title %}Produits - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-box"></i> Gestion des Produits</h1>
+    {% if user.role in 'admin,manager' %}
+    <a href="{% url 'produits:create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouveau Produit
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filtres et recherche -->
+<!-- Filtres et recherche -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <!-- Recherche texte -->
+            <div class="col-md-6">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher un produit..." 
+                       value="{{ request.GET.q|default:'' }}">
+            </div>
+
+            <!-- Filtre catégorie -->
+            <div class="col-md-4">
+                <select name="categorie" class="form-select">
+                    <option value="">Toutes les catégories</option>
+                    {% for categorie in categories %}
+                        <option value="{{ categorie.id }}" 
+                            {% if request.GET.categorie == categorie.id|add:"" %}selected{% endif %}>
+                            {{ categorie.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Alertes stock critique -->
+{% if stock_critique > 0 %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Attention !</strong> {{ stock_critique }} produit{{ stock_critique|pluralize }} en stock critique.
+    <a href="{% url 'stock:list' %}" class="alert-link">Voir les détails</a>
+</div>
+{% endif %}
+
+<!-- Liste des produits -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list"></i> Liste des Produits
+            <span class="badge bg-secondary ms-2">{{ produits|length }} produit{{ produits|pluralize }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Nom</th>
+                        <th>Catégorie</th>
+                        <th>Prix Vente</th>
+                        <th>Stock</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produit in produits %}
+                    <tr>
+                        <td>
+                            {% if produit.image %}
+                            <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ produit.nom }}</strong>
+                            {% if produit.description %}
+                            <br><small class="text-muted">{{ produit.description|truncatechars:50 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ produit.categorie.nom }}</span>
+                        </td>
+                        <td>
+                            <strong class="montant-cfa">{{ produit.prix_vente|floatformat:0|intcomma }}</strong>
+                            {% if produit.prix_achat %}
+                            <br><small class="text-muted">Achat: {{ produit.prix_achat|floatformat:0|intcomma }} FCFA</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ produit.quantite_stock }}
+                            </span>
+                            {% if produit.stock_critique %}
+                            <br><small class="text-danger">Seuil: {{ produit.seuil_alerte }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if produit.actif %}
+                            <span class="badge bg-success">Actif</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'produits:detail' produit.slug %}" class="btn btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.role in 'admin,manager' %}
+                                <a href="{% url 'produits:edit' produit.slug %}" class="btn btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if user.role == 'admin' %}
+                                <a href="{% url 'produits:delete' produit.slug %}" class="btn btn-outline-danger" title="Supprimer" data-confirm-delete="Êtes-vous sûr de vouloir supprimer ce produit ?">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <br>Aucun produit trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination produits" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% with q=request.GET.q categorie=request.GET.categorie %}
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Premier</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Précédent</a>
+            </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Suivant</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Dernier</a>
+            </li>
+        {% endif %}
+        {% endwith %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Achat {{ achat.numero }} - L'EXEMPLE SHOP{% endblock %}
+
+{% block extrahead %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-truck"></i> Achat {{ achat.numero }}</h1>
+    <div>
+        <a href="{% url 'achats:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'achats:edit' achat.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil" style="color: black;"></i> Modifier
+        </a>
+        {% if achat.statut == 'commande' %}
+        <form method="post" action="{% url 'achats:recevoir' achat.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-info">
+                <i class="bi bi-check-circle" style="color: black;"></i> Marquer Reçu
+            </button>
+        </form>
+        {% endif %}
+        {% if achat.statut == 'recu' %}
+        <form method="post" action="{% url 'achats:facturer' achat.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-receipt"></i> Facturer
+            </button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Détails de l'achat -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-info-circle" style="color: black;"></i> Détails de l'Achat</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Numéro:</th>
+                                <td><strong>{{ achat.numero }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Fournisseur:</th>
+                                <td>{{ achat.fournisseur.nom }}</td>
+                            </tr>
+                            <tr>
+                                <th>Contact:</th>
+                                <td>{{ achat.fournisseur.contact|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Téléphone:</th>
+                                <td>{{ achat.fournisseur.telephone|default:"N/A" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Date d'achat:</th>
+                                <td>{{ achat.date_achat|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date de livraison:</th>
+                                <td>{{ achat.date_livraison|date:"d/m/Y"|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Statut:</th>
+                                <td>
+                                    <span class="badge {% if achat.statut == 'facture' %}bg-success{% elif achat.statut == 'recu' %}bg-info{% elif achat.statut == 'commande' %}bg-warning{% else %}bg-secondary{% endif %} fs-6">
+                                        {{ achat.get_statut_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Total TTC:</th>
+                                <td><strong class="montant-cfa fs-5" style="color: black;">{{ achat.total_ttc|floatformat:0 }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if achat.note %}
+                <div class="mt-3">
+                    <h6>Note:</h6>
+                    <p class="text-muted">{{ achat.note }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Articles achetés -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-list-ul" style="color: black;"></i> Articles Achetés</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Prix Unitaire</th>
+                                <th>Quantité</th>
+                                <th>Quantité Reçue</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in achat.items.all %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.produit.nom }}</strong>
+                                    <br><small class="text-muted">{{ item.produit.categorie.nom }}</small>
+                                </td>
+                                <td class="montant-cfa">{{ item.prix_unitaire|floatformat:0 }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ item.quantite }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if item.quantite_recue %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ item.quantite_recue|default:"-" }}
+                                    </span>
+                                </td>
+                                <td><strong class="montant-cfa">{{ item.total_ttc|floatformat:0 }}</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Aucun article</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="4">Total</th>
+                                <th class="montant-cfa">{{ achat.total_ttc|floatformat:0 }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Résumé -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-calculator" style="color: black;"></i> Résumé</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Nombre d'articles:</span>
+                    <strong>{{ achat.items.count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Quantité totale:</span>
+                    <strong>{{ total_quantite|default:0 }}</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Sous-total HT:</span>
+                    <span class="montant-cfa">{{ achat.total_ht|floatformat:0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <strong>Total TTC:</strong>
+                    <strong class="montant-cfa text-success">{{ achat.total_ttc|floatformat:0 }}</strong>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-lightning p-2" style="color: black;"></i> Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.role in 'admin,manager' %}
+                    <a href="{% url 'achats:edit' achat.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil"></i> Modifier Achat
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'achats:create' %}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> Nouvel Achat
+                    </a>
+                    <a href="{% url 'achats:fournisseur_detail' achat.fournisseur.pk %}" class="btn btn-outline-info">
+                        <i class="bi bi-building"></i> Voir Fournisseur
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informations fournisseur -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-building" style="color: black;"></i> Fournisseur</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ achat.fournisseur.nom }}</h6>
+                {% if achat.fournisseur.contact %}
+                <p class="mb-1"><strong>Contact:</strong> {{ achat.fournisseur.contact }}</p>
+                {% endif %}
+                {% if achat.fournisseur.telephone %}
+                <p class="mb-1"><strong>Tél:</strong> {{ achat.fournisseur.telephone }}</p>
+                {% endif %}
+                {% if achat.fournisseur.email %}
+                <p class="mb-1"><strong>Email:</strong> {{ achat.fournisseur.email }}</p>
+                {% endif %}
+                {% if achat.fournisseur.adresse %}
+                <p class="mb-0"><strong>Adresse:</strong> {{ achat.fournisseur.adresse }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

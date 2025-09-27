@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Ajustement de Stock - L'EXEMPLE SHOP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-sliders"></i> Ajustement de Stock</h1>
+    <a href="{% url 'stock:list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">  
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi p-2 bi-sliders" style="color: black;"></i> Effectuer un Ajustement
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Attention !</strong> L'ajustement de stock modifie directement les quantités en stock. 
+                    Cette action créera un mouvement de stock et sera tracée dans l'historique.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="mt-3 d-flex justify-content-between">
+                        <a href="{% url 'stock:list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle" style="color: black;"></i> Valider l'ajustement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-info-circle" style="color: black;"></i> Informations</h5>
+            </div>
+            <div class="card-body">
+                <h6>Types d'ajustement :</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-plus-circle text-success"></i>
+                        <strong>Quantité positive :</strong> Ajoute du stock
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-dash-circle text-danger"></i>
+                        <strong>Quantité négative :</strong> Retire du stock
+                    </li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Motifs courants :</h6>
+                <ul class="list-unstyled small">
+                    <li>• Correction d'inventaire</li>
+                    <li>• Produit endommagé</li>
+                    <li>• Erreur de saisie</li>
+                    <li>• Vol ou perte</li>
+                    <li>• Retour client</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi p-2 bi-clock-history" style="color: black;"></i> Derniers Ajustements</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for mouvement in derniers_ajustements %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ mouvement.produit.nom|truncatechars:20 }}</h6>
+                            <small>{{ mouvement.date|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1">
+                            <span class="{% if mouvement.quantite > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {% if mouvement.quantite > 0 %}+{% endif %}{{ mouvement.quantite }}
+                            </span>
+                        </p>
+                        <small>{{ mouvement.utilisateur.get_full_name|default:mouvement.utilisateur.username }}</small>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        Aucun ajustement récent
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const produitSelect = document.getElementById('id_produit');
+    const quantiteInput = document.getElementById('id_quantite');
+    
+    // Afficher le stock actuel quand on sélectionne un produit
+    produitSelect.addEventListener('change', function() {
+        const produitId = this.value;
+        if (produitId) {
+            // TODO: appel AJAX pour afficher le stock actuel
+        }
+    });
+    
+    // Validation côté client
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const quantite = parseInt(quantiteInput.value);
+        const motif = document.getElementById('id_motif').value.trim();
+        
+        if (!quantite || quantite === 0) {
+            e.preventDefault();
+            alert('Veuillez saisir une quantité différente de zéro.');
+            return;
+        }
+        
+        if (!motif) {
+            e.preventDefault();
+            alert('Veuillez préciser le motif de l\'ajustement.');
+            return;
+        }
+        
+        // Confirmation pour les gros ajustements
+        if (Math.abs(quantite) > 100) {
+            if (!confirm(`Vous allez ajuster le stock de ${Math.abs(quantite)} unités. Êtes-vous sûr ?`)) {
+                e.preventDefault();
+                return;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

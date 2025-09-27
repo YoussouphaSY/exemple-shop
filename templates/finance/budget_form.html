@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load math_filters %}
+
+{% block title %}
+{% if object %}Modifier Budget {{ object.nom }}{% else %}Nouveau Budget{% endif %} - L'EXEMPLE SHOP
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="bi bi-{% if object %}pencil{% else %}plus-circle{% endif %}"></i>
+        {% if object %}Modifier Budget {{ object.nom }}{% else %}Nouveau Budget{% endif %}
+    </h1>
+    <a href="{% url 'finance:budgets' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle p-2" style="color: black;"></i> Informations du Budget
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle" style="color: black;"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} le Budget
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-lightbulb p-2" style="color: black;"></i> Conseils</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Définissez une période réaliste
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Sélectionnez les catégories concernées
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Fixez un montant atteignable
+                    </li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Catégories disponibles :</h6>
+                <ul class="list-unstyled small">
+                    <li>• vente</li>
+                    <li>• achat</li>
+                    <li>• frais</li>
+                    <li>• salaire</li>
+                    <li>• loyer</li>
+                    <li>• electricite</li>
+                    <li>• transport</li>
+                    <li>• publicite</li>
+                </ul>
+                
+                {% if object %}
+                <hr>
+                <h6>Statistiques</h6>
+                <small class="text-muted">
+                    <strong>Créé le:</strong> {{ object.date_creation|date:"d/m/Y" }}<br>
+                    <strong>Réalisé:</strong> {{ object.pourcentage_realise|floatformat:1 }}%<br>
+                    <strong>Statut:</strong> {% if object.actif %}Actif{% else %}Inactif{% endif %}
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

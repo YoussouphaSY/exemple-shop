@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Transaction {{ transaction.id }} - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-receipt"></i> Transaction #{{ transaction.id }}</h1>
+    <div>
+        <a href="{% url 'finance:transactions' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'finance:transaction_edit' transaction.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Modifier
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Détails de la Transaction</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Type:</th>
+                                <td>
+                                    <span class="badge {% if transaction.type == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                                        {{ transaction.get_type_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Montant:</th>
+                                <td>
+                                    <strong class="{% if transaction.type == 'RECETTE' %}text-success{% else %}text-danger{% endif %} fs-4">
+                                        {% if transaction.type == 'RECETTE' %}+{% else %}-{% endif %}{{ transaction.montant|floatformat:0 }} CFA
+                                    </strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Catégorie:</th>
+                                <td><span class="badge bg-secondary">{{ transaction.get_categorie_display }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Date:</th>
+                                <td>{{ transaction.date|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Date de valeur:</th>
+                                <td>{{ transaction.date_valeur|date:"d/m/Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Utilisateur:</th>
+                                <td>
+                                    {% if transaction.utilisateur %}
+                                    {{ transaction.utilisateur.get_full_name|default:transaction.utilisateur.username }}
+                                    {% else %}
+                                    <span class="text-muted">Système</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if transaction.vente %}
+                            <tr>
+                                <th>Vente liée:</th>
+                                <td>
+                                    <a href="{% url 'ventes:detail' transaction.vente.pk %}" class="btn btn-outline-primary btn-sm">
+                                        {{ transaction.vente.numero }}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if transaction.achat %}
+                            <tr>
+                                <th>Achat lié:</th>
+                                <td>
+                                    <a href="{% url 'achats:detail' transaction.achat.pk %}" class="btn btn-outline-primary btn-sm">
+                                        {{ transaction.achat.numero }}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Description:</h6>
+                    <p class="text-muted">{{ transaction.description }}</p>
+                </div>
+                
+                {% if transaction.piece_jointe %}
+                <div class="mt-3">
+                    <h6>Pièce jointe:</h6>
+                    <a href="{{ transaction.piece_jointe.url }}" target="_blank" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-paperclip"></i> Voir le fichier
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Résumé -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-calculator"></i> Résumé</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <h2 class="{% if transaction.type == 'RECETTE' %}text-success{% else %}text-danger{% endif %}">
+                        {% if transaction.type == 'RECETTE' %}+{% else %}-{% endif %}{{ transaction.montant|floatformat:0 }}
+                    </h2>
+                    <p class="text-muted">Francs CFA</p>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-12">
+                        <span class="badge {% if transaction.type == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                            {{ transaction.get_type_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-lightning"></i> Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if user.role in 'admin,manager' %}
+                    <a href="{% url 'finance:transaction_edit' transaction.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil"></i> Modifier Transaction
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'finance:transaction_create' %}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> Nouvelle Transaction
+                    </a>
+                    {% if transaction.piece_jointe %}
+                    <a href="{{ transaction.piece_jointe.url }}" target="_blank" class="btn btn-outline-info">
+                        <i class="bi bi-paperclip"></i> Voir Pièce Jointe
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informations complémentaires -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">
+                    <strong>ID Transaction:</strong> #{{ transaction.id }}<br>
+                    <strong>Créée le:</strong> {{ transaction.date|date:"d/m/Y à H:i" }}<br>
+                    <strong>Catégorie:</strong> {{ transaction.get_categorie_display }}<br>
+                    {% if transaction.utilisateur %}
+                    <strong>Par:</strong> {{ transaction.utilisateur.get_full_name|default:transaction.utilisateur.username }}
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

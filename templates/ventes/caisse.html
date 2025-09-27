@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+
+{% block title %}Caisse - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cash-register"></i> Interface de Caisse</h1>
+    <div>
+        <button type="button" class="btn btn-outline-secondary" onclick="resetCaisse()">
+            <i class="bi bi-arrow-clockwise"></i> Reset
+        </button>
+        <a href="{% url 'ventes:list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-list"></i> Historique
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sélection des produits -->
+    <div class="col-md-8 ">
+        <div class="modern-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-2"><i class="bi p-3 bi-grid" style="color: black;"></i> Sélection des Produits</h5>
+            </div>
+            <div class="card-body">
+                <!-- Recherche et filtres -->
+                <div class="filter-bar mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="search-box">
+                                <i class="bi bi-search search-icon"></i>
+                                <input type="text" id="searchProduct" class="form-control" placeholder="Rechercher un produit...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="categoryFilter" class="form-select">
+                                <option value="">Toutes les catégories</option>
+                                {% regroup produits by categorie as categories_grouped %}
+                                {% for category in categories_grouped %}
+                                <option value="{{ category.grouper.nom|lower }}">{{ category.grouper.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-success w-100" data-bs-toggle="modal" data-bs-target="#produitModal">
+                                <i class="bi bi-plus-circle"></i> Nouveau
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grille des produits -->
+                <div class="responsive-grid" id="productsGrid">
+                    {% for produit in produits %}
+                    <div class="product-item interactive-card" 
+                         data-name="{{ produit.nom|lower }}" 
+                         data-category="{{ produit.categorie.nom|lower }}"
+                         onclick="addToCart({{ produit.id }}, '{{ produit.nom }}', {{ produit.prix_vente }}, {{ produit.quantite_stock }})">
+                        <div class="card h-100 product-card">
+                            <div class="card-body text-center">
+                                {% if produit.image %}
+                                <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-fluid mb-2" style="max-height: 80px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center mb-2" style="height: 80px; border-radius: 0.5rem;">
+                                    <i class="bi bi-phone" style="font-size: 2rem; color: #D4AF37;"></i>
+                                </div>
+                                {% endif %}
+                                <h6 class="card-title">{{ produit.nom|truncatechars:20 }}</h6>
+                                <p class="card-text">
+                                    <strong class="text-success">{{ produit.prix_vente|floatformat:0 }} FCFA</strong><br>
+                                    <small class="text-muted">Stock: {{ produit.quantite_stock }}</small>
+                                </p>
+                                <span class="badge bg-info">{{ produit.categorie.nom }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox empty-state-icon"></i>
+                            <h3>Aucun produit disponible</h3>
+                            <p>Ajoutez des produits pour commencer les ventes</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panier et finalisation -->
+    <div class="col-md-4">
+        <!-- Panier -->
+        <div class="modern-card sticky-top" style="top: 2rem;">
+            <div class="card-header">
+                <h5 class="card-title mb-0 py-2">
+                    <i class="bi bi-cart p-3" style="color: black;"></i> Panier
+                    <span class="badge bg-primary" id="cartCount">0</span>
+                </h5>
+            </div>
+            <div class="card-body py-2" style="max-height: 400px; overflow-y: auto;">
+                <div id="cartItems">
+                    <div class="empty-state">
+                        <i class="bi bi-cart-x p-3" style="font-size: 2rem; color: #dee2e6;"></i>
+                        <p class="mt-2">Panier vide</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer p-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <strong>Total:</strong>
+                    <strong class="text-success" id="cartTotal">0 FCFA</strong>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informations client -->
+        <div class="modern-card mt-3">
+            <div class="card-header">
+                <h5 class="card-title py-2 mb-0"><i class="bi p-3 bi-person" style="color: black;"></i> Client</h5>
+            </div>
+            <div class="card-body p-2">
+                <div class="input-group-modern">
+                    <input type="text" id="clientName" class="form-control" placeholder=" ">
+                    <label>Nom du client (optionnel)</label>
+                </div>
+                <div class="input-group-modern">
+                    <input type="tel" id="clientPhone" class="form-control" placeholder=" ">
+                    <label>Téléphone (optionnel)</label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mode de paiement</label>
+                    <select id="paymentMode" class="form-select">
+                        <option value="especes">💰 Espèces</option>
+                        <option value="carte">💳 Carte bancaire</option>
+                        <option value="cheque">📄 Chèque</option>
+                        <option value="virement">🏦 Virement</option>
+                        <option value="mobile">📱 Orange Money / Wave</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Finalisation -->
+        <div class="modern-card mt-3">
+            <div class="card-body p-3">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-lg btn-pulse" onclick="finalizeVente()" id="finalizeBtn" disabled>
+                        <i class="bi bi-check-circle" style="color: black;"></i> Finaliser la Vente
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="clearCart()">
+                        <i class="bi bi-trash"></i> Vider le Panier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-check-circle"></i> Confirmer la Vente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Vérifiez les détails de la vente avant de confirmer
+                </div>
+                <div id="saleResume"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Annuler
+                </button>
+                <button type="button" class="btn btn-success" onclick="confirmVente()">
+                    <i class="bi bi-check-circle"></i> Confirmer la Vente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nouveau Produit -->
+<div class="modal fade" id="produitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box"></i> Nouveau Produit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="produitForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nom du produit *</label>
+                        <input type="text" name="nom" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Catégorie *</label>
+                        <select name="categorie" class="form-select" required>
+                            <option value="">Sélectionner une catégorie</option>
+                            {% regroup produits by categorie as categories_grouped %}
+                            {% for category in categories_grouped %}
+                            <option value="{{ category.grouper.id }}">{{ category.grouper.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Prix d'achat</label>
+                                <div class="input-group">
+                                    <input type="number" name="prix_achat" class="form-control" step="0.01">
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Prix de vente *</label>
+                                <div class="input-group">
+                                    <input type="number" name="prix_vente" class="form-control" step="0.01" required>
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stock initial</label>
+                        <input type="number" name="quantite_stock" class="form-control" value="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="createProduit()">
+                    <i class="bi bi-check-circle"></i> Créer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let cart = [];
+let cartTotal = 0;
+
+// Recherche et filtres
+document.getElementById('searchProduct').addEventListener('input', function() {
+    filterProducts();
+});
+
+document.getElementById('categoryFilter').addEventListener('change', function() {
+    filterProducts();
+});
+
+function filterProducts() {
+    const query = document.getElementById('searchProduct').value.toLowerCase();
+    const category = document.getElementById('categoryFilter').value.toLowerCase();
+    
+    document.querySelectorAll('.product-item').forEach(function(item) {
+        const name = item.dataset.name;
+        const itemCategory = item.dataset.category;
+        
+        const matchesSearch = name.includes(query);
+        const matchesCategory = !category || itemCategory.includes(category);
+        
+        if (matchesSearch && matchesCategory) {
+            item.style.display = 'block';
+            item.classList.add('fade-in');
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Ajouter au panier avec animation
+function addToCart(productId, productName, price, stock) {
+    const existingItem = cart.find(item => item.id === productId);
+    
+    if (existingItem) {
+        if (existingItem.quantity < stock) {
+            existingItem.quantity++;
+            showNotification(`${productName} ajouté au panier`, 'success');
+        } else {
+            showNotification('Stock insuffisant !', 'warning');
+            return;
+        }
+    } else {
+        cart.push({
+            id: productId,
+            name: productName,
+            price: price,
+            quantity: 1,
+            stock: stock
+        });
+        showNotification(`${productName} ajouté au panier`, 'success');
+    }
+    
+    updateCartDisplay();
+}
+
+// Mettre à jour l'affichage du panier
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cartItems');
+    const cartCount = document.getElementById('cartCount');
+    const cartTotalElement = document.getElementById('cartTotal');
+    const finalizeBtn = document.getElementById('finalizeBtn');
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-cart-x" style="font-size: 2rem; color: #dee2e6;"></i>
+                <p class="mt-2">Panier vide</p>
+            </div>
+        `;
+        cartCount.textContent = '0';
+        cartTotalElement.textContent = '0 FCFA';
+        finalizeBtn.disabled = true;
+        finalizeBtn.classList.remove('btn-pulse');
+        return;
+    }
+    
+    let html = '';
+    cartTotal = 0;
+    let totalItems = 0;
+    
+    cart.forEach(function(item, index) {
+        const itemTotal = item.price * item.quantity;
+        cartTotal += itemTotal;
+        totalItems += item.quantity;
+        
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded fade-in" style="background: rgba(212, 175, 55, 0.05);">
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">${item.name}</h6>
+                    <small class="text-muted">${item.price.toLocaleString()} FCFA x ${item.quantity}</small>
+                </div>
+                <div class="text-end">
+                    <strong class="text-success">${itemTotal.toLocaleString()} FCFA</strong>
+                    <div class="btn-group btn-group-sm mt-1">
+                        <button class="btn btn-outline-secondary" onclick="updateQuantity(${index}, -1)" title="Diminuer">
+                            <i class="bi bi-dash"></i>
+                        </button>
+                        <span class="btn btn-outline-primary">${item.quantity}</span>
+                        <button class="btn btn-outline-secondary" onclick="updateQuantity(${index}, 1)" title="Augmenter">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="removeFromCart(${index})" title="Supprimer">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    cartItems.innerHTML = html;
+    cartCount.textContent = totalItems;
+    cartTotalElement.textContent = cartTotal.toLocaleString() + ' FCFA';
+    finalizeBtn.disabled = false;
+    finalizeBtn.classList.add('btn-pulse');
+}
+
+// Modifier la quantité
+function updateQuantity(index, delta) {
+    const item = cart[index];
+    const newQuantity = item.quantity + delta;
+    
+    if (newQuantity <= 0) {
+        removeFromCart(index);
+    } else if (newQuantity <= item.stock) {
+        item.quantity = newQuantity;
+        updateCartDisplay();
+    } else {
+        showNotification('Stock insuffisant !', 'warning');
+    }
+}
+
+// Supprimer du panier
+function removeFromCart(index) {
+    const item = cart[index];
+    cart.splice(index, 1);
+    showNotification(`${item.name} retiré du panier`, 'info');
+    updateCartDisplay();
+}
+
+// Vider le panier
+function clearCart() {
+    if (cart.length > 0) {
+        cart = [];
+        updateCartDisplay();
+        showNotification('Panier vidé', 'info');
+    }
+}
+
+// Reset caisse
+function resetCaisse() {
+    clearCart();
+    document.getElementById('clientName').value = '';
+    document.getElementById('clientPhone').value = '';
+    document.getElementById('paymentMode').value = 'especes';
+    showNotification('Caisse réinitialisée', 'info');
+}
+
+// Finaliser la vente
+function finalizeVente() {
+    if (cart.length === 0) {
+        showNotification('Le panier est vide !', 'warning');
+        return;
+    }
+    
+    // Afficher le résumé dans la modal
+    let resumeHtml = `
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Qté</th>
+                        <th>Prix Unit.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    cart.forEach(function(item) {
+        resumeHtml += `
+            <tr>
+                <td>${item.name}</td>
+                <td><span class="badge bg-primary">${item.quantity}</span></td>
+                <td>${item.price.toLocaleString()} FCFA</td>
+                <td><strong>${(item.price * item.quantity).toLocaleString()} FCFA</strong></td>
+            </tr>
+        `;
+    });
+    
+    resumeHtml += `
+                </tbody>
+                <tfoot>
+                    <tr class="table-active">
+                        <th colspan="3">Total</th>
+                        <th class="text-success">${cartTotal.toLocaleString()} CFA</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="mt-3">
+            <strong>Client:</strong> ${document.getElementById('clientName').value || 'Client anonyme'}<br>
+            <strong>Téléphone:</strong> ${document.getElementById('clientPhone').value || 'N/A'}<br>
+            <strong>Paiement:</strong> ${document.getElementById('paymentMode').selectedOptions[0].text}
+        </div>
+    `;
+    
+    document.getElementById('saleResume').innerHTML = resumeHtml;
+    
+    // Afficher la modal
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
+}
+
+// Confirmer la vente
+function confirmVente() {
+    const saleData = {
+        client: document.getElementById('clientName').value,
+        telephone: document.getElementById('clientPhone').value,
+        mode_paiement: document.getElementById('paymentMode').value,
+        items: cart.map(item => ({
+            produit_id: item.id,
+            quantite: item.quantity,
+            prix_unitaire: item.price
+        }))
+    };
+    
+    // Afficher le loading
+    showLoading();
+    
+    // Envoyer la vente au serveur
+    fetch('{% url "ventes:caisse" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(saleData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            showSuccessAnimation();
+            setTimeout(() => {
+                // Ouvrir le ticket dans un nouvel onglet
+                window.open(`/ventes/${data.vente_id}/ticket/`, '_blank');
+                resetCaisse();
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                showNotification(`Vente ${data.numero} enregistrée avec succès!`, 'success');
+            }, 1500);
+        } else {
+            showNotification('Erreur : ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Erreur:', error);
+        showNotification('Une erreur est survenue', 'danger');
+    });
+}
+
+// Créer un nouveau produit
+function createProduit() {
+    const form = document.getElementById('produitForm');
+    const formData = new FormData(form);
+    
+    fetch('{% url "produits:quick_create" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('produitModal')).hide();
+            form.reset();
+            showNotification('Produit créé avec succès!', 'success');
+            // Recharger la page pour afficher le nouveau produit
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Erreur lors de la création', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Une erreur est survenue', 'danger');
+    });
+}
+
+// Fonctions utilitaires
+function showLoading() {
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.id = 'loadingOverlay';
+    overlay.innerHTML = '<div class="loading-spinner"></div>';
+    document.body.appendChild(overlay);
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+function showSuccessAnimation() {
+    const overlay = document.createElement('div');
+    overlay.className = 'loading-overlay';
+    overlay.innerHTML = `
+        <div class="text-center text-white">
+            <svg class="success-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="success-checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="success-checkmark__check" fill="none" d="m14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <h3>Vente Enregistrée!</h3>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    
+    setTimeout(() => overlay.remove(), 2000);
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification alert alert-${type}`;
+    notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Ajouter le token CSRF
+document.addEventListener('DOMContentLoaded', function() {
+    if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        document.body.appendChild(csrfToken);
+    }
+});
+</script>
+{% endblock %}

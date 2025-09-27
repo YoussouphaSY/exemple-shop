@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load math_filters %}
+{% load humanize %}
+
+{% block title %}Ventes - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cart3"></i> Gestion des Ventes</h1>
+    <div>
+        <a href="{% url 'ventes:caisse' %}" class="btn btn-success">
+            <i class="bi bi-cart-plus"></i> Nouvelle Vente
+        </a>
+        <a href="{% url 'ventes:export' %}" class="btn btn-outline-primary">
+            <i class="bi bi-download "></i> Exporter
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Ventes Aujourd'hui</h6>
+                        <h4>{{ ventes_aujourd_hui }}</h4>
+                    </div>
+                    <i class="bi bi-cart3" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>CA Aujourd'hui</h6>
+                        <h4>{{ ca_aujourd_hui|floatformat:2|intcomma }}FCFA</h4>
+                    </div>
+                    <i class="bi bi-currency-euro" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Date début</label>
+                <input type="date" name="date_debut" class="form-control" value="{{ request.GET.date_debut }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Date fin</label>
+                <input type="date" name="date_fin" class="form-control" value="{{ request.GET.date_fin }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel" style="color: black;"></i> Filtrer
+                    </button>
+                    <a href="{% url 'ventes:list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des ventes -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list"></i> Liste des Ventes
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Numéro</th>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Total TTC</th>
+                        <th>Mode Paiement</th>
+                        <th>Vendeur</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vente in ventes %}
+                    <tr>
+                        <td>
+                            <strong>{{ vente.numero }}</strong>
+                        </td>
+                        <td>{{ vente.date_vente|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if vente.client %}
+                            {{ vente.client }}
+                            {% if vente.telephone_client %}
+                            <br><small class="text-muted">{{ vente.telephone_client }}</small>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-muted">Client anonyme</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong class="montant-cfa text-success">{{ vente.total_ttc|floatformat:0|intcomma|intcomma }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ vente.get_mode_paiement_display }}</span>
+                        </td>
+                        <td>
+                            {% if vente.vendeur %}
+                            {{ vente.vendeur.get_full_name|default:vente.vendeur.username }}
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'ventes:detail' vente.pk %}" class="btn btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'ventes:ticket' vente.pk %}" class="btn btn-outline-primary" title="Ticket" target="_blank">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                                {% if user.role in 'admin,manager' %}
+                                <a href="{% url 'ventes:edit' vente.pk %}" class="btn btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-cart-x" style="font-size: 2rem;"></i>
+                            <br>Aucune vente trouvée
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination ventes" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Premier</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernier</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

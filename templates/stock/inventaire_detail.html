@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventaire {{ inventaire.nom }} - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-clipboard-check"></i> {{ inventaire.nom }}</h1>
+    <div>
+        <a href="{% url 'stock:inventaire_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        {% if user.role in 'admin,manager' %}
+        {% if not inventaire.clos %}
+        <a href="{% url 'stock:inventaire_edit' inventaire.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Modifier
+        </a>
+        <form method="post" action="{% url 'stock:inventaire_close' inventaire.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success" onclick="return confirm('Êtes-vous sûr de vouloir clôturer cet inventaire ? Cette action est irréversible.')">
+                <i class="bi bi-check-circle"></i> Clôturer
+            </button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Nom:</th>
+                        <td>{{ inventaire.nom }}</td>
+                    </tr>
+                    <tr>
+                        <th>Statut:</th>
+                        <td>
+                            {% if inventaire.clos %}
+                            <span class="badge bg-success">Clos</span>
+                            {% else %}
+                            <span class="badge bg-warning">En cours</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Créé le:</th>
+                        <td>{{ inventaire.date_creation|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% if inventaire.date_cloture %}
+                    <tr>
+                        <th>Clos le:</th>
+                        <td>{{ inventaire.date_cloture|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Utilisateur:</th>
+                        <td>{{ inventaire.utilisateur.get_full_name|default:inventaire.utilisateur.username }}</td>
+                    </tr>
+                </table>
+                
+                {% if inventaire.description %}
+                <div class="mt-3">
+                    <h6>Description:</h6>
+                    <p class="text-muted">{{ inventaire.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Résumé -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-calculator"></i> Résumé</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ inventaire.items.count }}</h4>
+                        <small class="text-muted">Articles</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="{% if ecarts_count > 0 %}text-warning{% else %}text-success{% endif %}">
+                            {{ ecarts_count|default:0 }}
+                        </h4>
+                        <small class="text-muted">Écarts</small>
+                    </div>
+                </div>
+                
+                {% if inventaire.clos %}
+                <hr>
+                <div class="text-center">
+                    <h6 class="text-success">Inventaire Terminé</h6>
+                    <small class="text-muted">Les ajustements ont été appliqués</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Articles de l'inventaire -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-list-ul"></i> Articles de l'Inventaire</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Stock Système</th>
+                                <th>Quantité Comptée</th>
+                                <th>Écart</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventaire.items.all %}
+                            <tr class="{% if item.ecart != 0 %}table-warning{% endif %}">
+                                <td>
+                                    <strong>{{ item.produit.nom }}</strong>
+                                    <br><small class="text-muted">{{ item.produit.categorie.nom }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ item.quantite_systeme }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ item.quantite_comptee }}</span>
+                                </td>
+                                <td>
+                                    {% if item.ecart != 0 %}
+                                    <span class="badge {% if item.ecart > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if item.ecart > 0 %}+{% endif %}{{ item.ecart }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.note %}
+                                    <small class="text-muted">{{ item.note|truncatechars:30 }}</small>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Aucun article dans cet inventaire</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

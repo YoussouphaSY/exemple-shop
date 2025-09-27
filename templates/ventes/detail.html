@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}Vente {{ vente.numero }} - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-cart3"></i> Vente {{ vente.numero }}</h1>
+    <div>
+        <a href="{% url 'ventes:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <a href="{% url 'ventes:ticket' vente.pk %}" class="btn btn-primary" target="_blank">
+            <i class="bi bi-printer" style="color: black;"></i> Imprimer Ticket
+        </a>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'ventes:edit' vente.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil" style="color: black;"></i> Modifier
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Détails de la vente -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Détails de la Vente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Numéro:</th>
+                                <td><strong>{{ vente.numero }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Date:</th>
+                                <td>{{ vente.date_vente|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Client:</th>
+                                <td>
+                                    {% if vente.client %}
+                                    {{ vente.client }}
+                                    {% else %}
+                                    <span class="text-muted">Client anonyme</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Téléphone:</th>
+                                <td>{{ vente.telephone_client|default:"N/A" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Mode de paiement:</th>
+                                <td><span class="badge bg-info">{{ vente.get_mode_paiement_display }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Vendeur:</th>
+                                <td>
+                                    {% if vente.vendeur %}
+                                    {{ vente.vendeur.get_full_name|default:vente.vendeur.username }}
+                                    {% else %}
+                                    <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Total HT:</th>
+                                <td>{{ vente.total_ht }} FCFA</td>
+                            </tr>
+                            <tr>
+                                <th>Total TTC:</th>
+                                <td><strong class="text-success fs-5">{{ vente.total_ttc }} FCFA</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if vente.note %}
+                <div class="mt-3">
+                    <h6>Note:</h6>
+                    <p class="text-muted">{{ vente.note }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Articles vendus -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-list-ul"></i> Articles Vendus</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Prix Unitaire</th>
+                                <th>Quantité</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in vente.items.all %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.produit.nom }}</strong>
+                                    <br><small class="text-muted">{{ item.produit.categorie.nom }}</small>
+                                </td>
+                                <td>{{ item.prix_unitaire }} FCFA</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ item.quantite }}</span>
+                                </td>
+                                <td><strong>{{ item.total_ttc }} FCFA</strong></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Aucun article</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="3">Total</th>
+                                <th>{{ vente.total_ttc }} FCFA</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Résumé -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-calculator"></i> Résumé</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Nombre d'articles:</span>
+                    <strong>{{ vente.items.count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Quantité totale:</span>
+                    <strong>{{ vente.items.all|length }}</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Sous-total HT:</span>
+                    <span>{{ vente.total_ht }} FCFA</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <strong>Total TTC:</strong>
+                    <strong class="text-success">{{ vente.total_ttc }} FCFA</strong>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-lightning"></i> Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'ventes:ticket' vente.pk %}" class="btn btn-outline-primary" target="_blank">
+                        <i class="bi bi-printer"></i> Imprimer Ticket
+                    </a>
+                    {% if user.role in 'admin,manager' %}
+                    <a href="{% url 'ventes:edit' vente.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil"></i> Modifier Vente
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'ventes:caisse' %}" class="btn btn-outline-success">
+                        <i class="bi bi-cart-plus"></i> Nouvelle Vente
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

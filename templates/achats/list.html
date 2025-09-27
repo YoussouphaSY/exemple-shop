@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load math_filters %}
+{% load humanize %}
+
+{% block title %}Achats - Shop360{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-truck"></i> Gestion des Achats</h1>
+    <div>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'achats:create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle" style="color: black;"></i> Nouvel Achat
+        </a>
+        {% endif %}
+        <a href="{% url 'achats:export' %}" class="btn btn-outline-primary">
+            <i class="bi bi-download"></i> Exporter
+        </a>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Achats</h6>
+                        <h4>{{ total_achats }}</h4>
+                    </div>
+                    <i class="bi bi-truck" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Montant Facturé</h6>
+                        <h4>{{ total_facture|floatformat:0|intcomma }} CFA</h4>
+                    </div>
+                    <i class="bi bi-cash-stack" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Statut</label>
+                <select name="statut" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    {% for value, label in statuts %}
+                    <option value="{{ value }}" {% if request.GET.statut == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fournisseur</label>
+                <select name="fournisseur" class="form-select">
+                    <option value="">Tous les fournisseurs</option>
+                    <!-- Ajouter les fournisseurs dynamiquement -->
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel" style="color: black;"></i> Filtrer
+                    </button>
+                    <a href="{% url 'achats:list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des achats -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list p-2" style="color: black;"></i> Liste des Achats
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Numéro</th>
+                        <th>Fournisseur</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Total TTC</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for achat in achats %}
+                    <tr>
+                        <td>
+                            <strong>{{ achat.numero }}</strong>
+                        </td>
+                        <td>{{ achat.fournisseur.nom }}</td>
+                        <td>{{ achat.date_achat|date:"d/m/Y" }}</td>
+                        <td>
+                            <span class="badge {% if achat.statut == 'facture' %}bg-success{% elif achat.statut == 'recu' %}bg-info{% elif achat.statut == 'commande' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ achat.get_statut_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="montant-cfa">{{ achat.total_ttc|floatformat:0|intcomma }}</strong>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'achats:detail' achat.pk %}" class="btn btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.role in 'admin,manager' %}
+                                <a href="{% url 'achats:edit' achat.pk %}" class="btn btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-truck" style="font-size: 2rem;"></i>
+                            <br>Aucun achat trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Pagination achats" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">Premier</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernier</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

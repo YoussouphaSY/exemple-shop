@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket {{ vente.numero }} - Shop360</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .shop-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .shop-info {
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+        .ticket-info {
+            margin-bottom: 15px;
+        }
+        .ticket-info div {
+            margin-bottom: 3px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .items-table th,
+        .items-table td {
+            text-align: left;
+            padding: 2px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+        .items-table th {
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+        }
+        .item-name {
+            width: 60%;
+        }
+        .item-qty {
+            width: 15%;
+            text-align: center;
+        }
+        .item-price {
+            width: 25%;
+            text-align: right;
+        }
+        .total-section {
+            border-top: 2px solid #000;
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .total-final {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px dotted #ccc;
+            font-size: 10px;
+        }
+        .payment-info {
+            margin: 10px 0;
+            text-align: center;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 10px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- En-tête -->
+    <div class="header">
+        <div class="shop-name">L'EXEMPLE SHOP</div>
+        <div class="shop-info">Boutique</div>
+        <div class="shop-info">Téléphones & Accessoires</div>
+        <div class="shop-info">Tel: +33 1 23 45 67 89</div>
+    </div>
+    
+    <!-- Informations du ticket -->
+    <div class="ticket-info">
+        <div><strong>Ticket N°:</strong> {{ vente.numero }}</div>
+        <div><strong>Date & Heure:</strong> {{ vente.date_vente|date:"d/m/Y H:i" }}</div>
+        {% if vente.client %}
+        <div><strong>Client:</strong> {{ vente.client }}</div>
+        {% endif %}
+        {% if vente.telephone_client %}
+        <div><strong>Tél:</strong> {{ vente.telephone_client }}</div>
+        {% endif %}
+        {% if vente.vendeur %}
+        <div><strong>Vendeur:</strong> {{ vente.vendeur.get_full_name|default:vente.vendeur.username }}</div>
+        {% endif %}
+    </div>
+    
+    <!-- Articles -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="item-name">Article</th>
+                <th class="item-qty">Qté</th>
+                <th class="item-price">Prix</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in vente.items.all %}
+            <tr>
+                <td class="item-name">{{ item.produit.nom|truncatechars:25 }}</td>
+                <td class="item-qty">{{ item.quantite }}</td>
+                <td class="item-price">{{ item.total_ttc }} FCFA</td>
+            </tr>
+            {% if item.produit.nom|length > 25 %}
+            <tr>
+                <td colspan="3" style="font-size: 10px; color: #666; padding-left: 10px;">
+                    {{ item.produit.nom }}
+                </td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td colspan="3" style="font-size: 10px; color: #666; padding-left: 10px;">
+                    {{ item.prix_unitaire }} FCFA x {{ item.quantite }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Totaux -->
+    <div class="total-section">
+        <div class="total-line">
+            <span>Sous-total HT:</span>
+            <span>{{ vente.total_ht }} FCFA</span>
+        </div>
+        <div class="total-line">
+            <span>TVA:</span>
+            <span>0.00 FCFA</span>
+        </div>
+        <div class="total-line total-final">
+            <span>TOTAL TTC:</span>
+            <span>{{ vente.total_ttc }} FCFA</span>
+        </div>
+    </div>
+    
+    <!-- Mode de paiement -->
+    <div class="payment-info">
+        <strong>Paiement: {{ vente.get_mode_paiement_display }}</strong>
+    </div>
+    
+    <!-- Pied de page -->
+    <div class="footer">
+        <div>Merci de votre visite !</div>
+        <div>À bientôt chez L'EXEMPLE SHOP</div>
+        <div style="margin-top: 10px;">
+            ================================
+        </div>
+        <div>TVA non applicable - Art. 293B du CGI</div>
+        {% if vente.note %}
+        <div style="margin-top: 10px;">
+            <strong>Note:</strong> {{ vente.note }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Boutons d'action (masqués à l'impression) -->
+    <div class="no-print" style="text-align: center; margin-top: 30px;">
+        <button onclick="window.print()" style="padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Imprimer
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; margin: 5px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Fermer
+        </button>
+    </div>
+    
+    <script>
+        // Auto-print when page loads
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
