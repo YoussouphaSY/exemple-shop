@@ -219,4 +219,8 @@ shop360/
 
 ---
 
+- Solde total : c’est le solde global après avoir pris en compte recettes, dépenses et budgets actifs.
+
+- Solde en caisse : c’est la caisse physique actuelle, qui n’intègre pas les budgets prévisionnels.
+
 **Shop360** - Une solution complète pour la gestion de votre boutique ! 🏪✨

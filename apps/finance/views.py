@@ -13,6 +13,7 @@ from .models import Transaction, Budget, CaisseFonds
 from .forms import TransactionForm, BudgetForm, MouvementCaisseForm
 from apps.users.decorators import manager_or_admin_cashier_required
 from django.utils.decorators import method_decorator
+from django.core.exceptions import ValidationError
 import json
 
 
@@ -202,6 +203,20 @@ class BudgetDetailView(LoginRequiredMixin, DetailView):
 #         context['transactions_liees'] = self.object.transactions.all().order_by('-date')
 #         return context
 
+# class BudgetCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+#     model = Budget
+#     form_class = BudgetForm
+#     template_name = 'finance/budget_form.html'
+#     success_url = reverse_lazy('finance:budgets')
+    
+#     def test_func(self):
+#         return self.request.user.role in ['admin', 'manager']
+    
+#     def form_valid(self, form):
+#         form.instance.utilisateur = self.request.user
+#         messages.success(self.request, 'Budget créé avec succès!')
+#         return super().form_valid(form)
+
 class BudgetCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Budget
     form_class = BudgetForm
@@ -212,10 +227,14 @@ class BudgetCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return self.request.user.role in ['admin', 'manager']
     
     def form_valid(self, form):
-        form.instance.utilisateur = self.request.user
-        messages.success(self.request, 'Budget créé avec succès!')
-        return super().form_valid(form)
-
+        try:
+            form.instance.utilisateur = self.request.user
+            form.instance.full_clean()  # exécute la validation du modèle
+            messages.success(self.request, 'Budget créé avec succès!')
+            return super().form_valid(form)
+        except ValidationError as e:
+            form.add_error(None, e)  # ajoute les erreurs au formulaire
+            return self.form_invalid(form)
 
 class BudgetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Budget
@@ -226,12 +245,25 @@ class BudgetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user.role in ['admin', 'manager']
 
     def form_valid(self, form):
-        messages.success(self.request, 'Budget modifié avec succès!')
-        return super().form_valid(form)
+        form.instance.utilisateur = self.request.user
+        response = super().form_valid(form)
+
+        # Créer une transaction automatique pour "bloquer" le budget
+        Transaction.objects.create(
+            type='DEPENSE',
+            montant=form.instance.montant_prevu,
+            categorie='budget',
+            description=f"Budget prévu: {form.instance.nom}",
+            budget=form.instance,
+            utilisateur=self.request.user,
+            date_valeur=form.instance.periode_debut
+        )
+
+        messages.success(self.request, 'Budget créé et solde mis à jour!')
+        return response
 
     def get_success_url(self):
         return reverse_lazy('finance:budget_detail', kwargs={'pk': self.object.pk})
-
 
 class CaisseView(LoginRequiredMixin, TemplateView):
     template_name = 'finance/caisse.html'

@@ -4,6 +4,7 @@ from django.db.models import Sum
 from decimal import Decimal
 from django.db.models import Q
 User = get_user_model()
+from django.core.exceptions import ValidationError
 
 
 class Transaction(models.Model):
@@ -39,6 +40,14 @@ class Transaction(models.Model):
         blank=True,
         related_name='transactions'  # <- correspond à user.ventes
     )
+
+    @classmethod
+    def get_solde(cls):
+        recettes = cls.objects.filter(type='RECETTE').aggregate(total=Sum('montant'))['total'] or 0
+        depenses = cls.objects.filter(type='DEPENSE').aggregate(total=Sum('montant'))['total'] or 0
+        from .models import Budget
+        budgets = Budget.objects.filter(actif=True).aggregate(total=Sum('montant_prevu'))['total'] or 0
+        return recettes - depenses - budgets
     
     # Relations optionnelles vers ventes/achats
     vente = models.ForeignKey('ventes.Vente', on_delete=models.CASCADE, null=True, blank=True, related_name='transactions')
@@ -53,7 +62,7 @@ class Transaction(models.Model):
         ordering = ['-date']
     
     def __str__(self):
-        return f"{self.get_type_display()} - {self.montant}€ - {self.description[:50]}"
+        return f"{self.get_type_display()} - {self.montant} FCFA - {self.description[:50]}"
     
     def save(self, *args, **kwargs):
         # Set date_valeur to today if not provided
@@ -117,7 +126,17 @@ class Budget(models.Model):
         ordering = ['-date_creation']
     
     def __str__(self):
-        return f"{self.nom} - {self.montant_prevu}€"
+        return f"{self.nom} - {self.montant_prevu} FCFA"
+    
+    def clean(self):
+        """Validation métier : un budget actif ne doit pas dépasser le solde disponible"""
+        from .models import Transaction  # éviter import circulaire
+        if self.actif:
+            solde_total = Transaction.get_solde()
+            if self.montant_prevu > solde_total:
+                raise ValidationError(
+                    {"montant_prevu": f"Le montant prévu ({self.montant_prevu} FCFA) dépasse le solde total ({solde_total} FFA)."}
+                )
     
 
     @property
@@ -189,7 +208,7 @@ class Budget(models.Model):
 #         ordering = ['-date']
     
 #     def __str__(self):
-#         return f"{self.get_type_display()} - {self.montant}€"
+#         return f"{self.get_type_display()} - {self.montant} FCFA"
     
 #     @classmethod
 #     def get_solde_caisse(cls):

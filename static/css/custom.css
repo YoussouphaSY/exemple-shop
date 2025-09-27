@@ -39,6 +39,9 @@ body {
   color: var(--secondary-color);
   border-left: 3px solid var(--light-gold);
   transform: translateX();
+  .logo {
+    color: white;
+  }
 }
 
 #sidebar .nav-link.active {
