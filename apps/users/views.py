@@ -3,9 +3,11 @@ from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from .models import User
 from .forms import UserRegistrationForm, UserUpdateForm
+from django.db.models import Sum
+
 
 
 class RegisterView(CreateView):
@@ -52,6 +54,8 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 
+from django.utils import timezone
+
 class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = User
     template_name = 'users/user_detail.html'
@@ -60,14 +64,35 @@ class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def test_func(self):
         return self.request.user.role in ['admin', 'manager']
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
 
-class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+        # Exemple : récupérer les 5 dernières ventes faites par ce user
+        ventes = user.ventes_vendeur.order_by('-date_vente')[:5]
+
+        # Transformer en "activités"
+        activites = []
+        for vente in ventes:
+            activites.append({
+                "titre": f"Vente #{vente.id}",
+                "description": f"Montant total : {vente.total_ttc} CFA",
+                "date": vente.date_vente,
+                "type": "Vente"
+            })
+
+        # TODO : tu peux aussi ajouter les transactions et mouvements ici
+
+        context["activites_recentes"] = activites
+        return context
+
+
+class UserUpdateView(UpdateView):
     model = User
     form_class = UserUpdateForm
     template_name = 'users/user_edit.html'
-    
-    def test_func(self):
-        return self.request.user.role == 'admin'
-    
+    context_object_name = 'user_obj'  # <-- maintenant user_obj sera disponible
+
     def get_success_url(self):
-        return reverse_lazy('users:user_detail', kwargs={'pk': self.object.pk})
+        # Redirige vers la page de détail de l'utilisateur
+        return reverse('users:user_detail', kwargs={'pk': self.object.pk})

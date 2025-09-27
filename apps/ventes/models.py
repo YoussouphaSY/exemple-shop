@@ -24,9 +24,16 @@ class Vente(models.Model):
     total_ht = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_ttc = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     mode_paiement = models.CharField(max_length=20, choices=MODE_PAIEMENT_CHOICES, default='especes')
-    vendeur = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    vendeur = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="ventes_vendeur")
     date_vente = models.DateTimeField(auto_now_add=True)
     note = models.TextField(blank=True)
+    utilisateur = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ventes_utilisateur'  # <- correspond à user.ventes
+    )
     
     class Meta:
         verbose_name = "Vente"

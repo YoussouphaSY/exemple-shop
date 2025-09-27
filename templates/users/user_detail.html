@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}{{ user_obj.get_full_name|default:user_obj.username }} - Shop360{% endblock %}
 
@@ -21,7 +22,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+                <h5 class="card-title mb-0 py-2"><i class="bi p-2 bi-info-circle"></i> Informations</h5>
             </div>
             <div class="card-body text-center">
                 <div class="avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
@@ -73,7 +74,7 @@
         <!-- Statistiques d'activité -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Statistiques d'Activité</h5>
+                <h5 class="card-title mb-0 p-2"><i class="bi p-2 bi-graph-up"></i> Statistiques d'Activité</h5>
             </div>
             <div class="card-body">
                 <div class="row text-center">
@@ -82,7 +83,7 @@
                         <p class="text-muted">Ventes</p>
                     </div>
                     <div class="col-md-3">
-                        <h3 class="text-success">{{ user_obj.ca_total|default:0|floatformat:0 }}</h3>
+                        <h3 class="text-success">{{ user_obj.ca_total|default:0|floatformat:0|intcomma }}</h3>
                         <p class="text-muted">CFA CA</p>
                     </div>
                     <div class="col-md-3">
@@ -100,7 +101,7 @@
         <!-- Activité récente -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> Activité Récente</h5>
+                <h5 class="card-title mb-0 p-2"><i class="bi p-2 bi-clock-history"></i> Activité Récente</h5>
             </div>
             <div class="card-body">
                 <div class="list-group list-group-flush">

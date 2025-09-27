@@ -32,7 +32,13 @@ class Transaction(models.Model):
     description = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
     date_valeur = models.DateField(null=True, blank=True, help_text="Date de valeur de la transaction")
-    utilisateur = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    utilisateur = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transactions'  # <- correspond à user.ventes
+    )
     
     # Relations optionnelles vers ventes/achats
     vente = models.ForeignKey('ventes.Vente', on_delete=models.CASCADE, null=True, blank=True, related_name='transactions')

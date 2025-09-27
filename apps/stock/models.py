@@ -83,7 +83,14 @@ class Inventaire(models.Model):
     description = models.TextField(blank=True)
     date_creation = models.DateTimeField(auto_now_add=True)
     date_cloture = models.DateTimeField(null=True, blank=True)
-    utilisateur = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    utilisateur = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='inventaires'  # <- correspond à user.ventes
+    )
+    
     clos = models.BooleanField(default=False)
     
     class Meta:

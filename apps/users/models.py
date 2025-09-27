@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.models import Group, Permission
 from django.utils import timezone
-
+from django.db.models import Sum
 
 class User(AbstractUser):
     """Custom User model with additional fields."""
@@ -28,6 +28,24 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} - {self.get_role_display()}"
     
+    @property
+    def ventes_count(self):
+        # ventes faites comme vendeur
+        return self.ventes_vendeur.count()
+
+    @property
+    def ca_total(self):
+        return self.ventes_vendeur.aggregate(total=Sum('total_ttc'))['total'] or 0
+
+    @property
+    def transactions_count(self):
+        return sum(v.transactions.count() for v in self.ventes_vendeur.all())
+
+    @property
+    def mouvements_count(self):
+        # À adapter selon ton modèle Mouvements
+        return 0
+        
     def save(self, *args, **kwargs):
         """Assign user to appropriate group based on role."""
         is_new = self.pk is None
@@ -36,6 +54,7 @@ class User(AbstractUser):
         if is_new:
             # Create groups if they don't exist and assign permissions
             self.assign_role_permissions()
+            
     
     def assign_role_permissions(self):
         """Assign permissions based on user role."""
