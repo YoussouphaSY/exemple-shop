@@ -83,7 +83,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6>Produits Actifs</h6>
-                        <h4>{{ produits.count }}</h4>
+                        <h4 style="font-weight: 900;">{{ produits.count }}</h4>
                     </div>
                     <i class="bi bi-box" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
                 </div>
@@ -96,7 +96,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6>Stock Total</h6>
-                        <h4>{{ produits|length }}</h4>
+                        <h4 style="font-weight: 900;">{{ produits|length }}</h4>
                     </div>
                     <i class="bi bi-boxes" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
                 </div>
@@ -109,7 +109,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6>Stock Critique</h6>
-                        <h4>{{ stock_critique.count|default:0 }}</h4>
+                        <h4 style="font-weight: 900;">{{ stock_critique.count|default:0 }}</h4>
                     </div>
                     <i class="bi bi-exclamation-triangle" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
                 </div>
@@ -122,7 +122,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6>Valeur Stock</h6>
-                        <h4>{{ valeur_stock|default:"0"|floatformat:0|intcomma }} FCFA</h4>
+                        <h4 style="font-weight: 900;">{{ valeur_stock|default:"0"|floatformat:0|intcomma }} FCFA</h4>
                     </div>
                     <i class="bi bi-currency-euro" style="font-size: 2rem; opacity: 0.7; color: black;"></i>
                 </div>
