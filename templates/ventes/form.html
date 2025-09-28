@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load widget_tweaks %}
 
 {% block title %}
 {% if object %}Modifier Vente {{ object.numero }}{% else %}Nouvelle Vente{% endif %} - Shop360
@@ -41,25 +42,28 @@
                     <div id="formset-container">
                         {% for form in formset %}
                         <div class="formset-form border rounded p-3 mb-3">
-                            <div class="row">
+                            <div class="row g-3 align-items-end">
                                 <div class="col-md-5">
-                                    {{ form.produit.label_tag }}
-                                    {{ form.produit }}
+                                    <label class="form-label">{{ form.produit.label }}</label>
+                                    {{ form.produit|add_class:"form-select" }}
                                 </div>
                                 <div class="col-md-2">
-                                    {{ form.quantite.label_tag }}
-                                    {{ form.quantite }}
+                                    <label class="form-label">{{ form.quantite.label }}</label>
+                                    {{ form.quantite|add_class:"form-control" }}
                                 </div>
                                 <div class="col-md-3">
-                                    {{ form.prix_unitaire.label_tag }}
-                                    {{ form.prix_unitaire }}
+                                    <label class="form-label">{{ form.prix_unitaire.label }}</label>
+                                    <div class="input-group">
+                                        {{ form.prix_unitaire|add_class:"form-control" }}
+                                        <span class="input-group-text">FCFA</span>
+                                    </div>
                                 </div>
                                 <div class="col-md-2">
                                     <label class="form-label">Total</label>
                                     <input type="text" class="form-control total-item" readonly>
                                     {% if formset.can_delete %}
                                     <div class="form-check mt-2">
-                                        {{ form.DELETE }}
+                                        {{ form.DELETE|add_class:"form-check-input" }}
                                         <label class="form-check-label text-danger">Supprimer</label>
                                     </div>
                                     {% endif %}
@@ -69,11 +73,12 @@
                         </div>
                         {% endfor %}
                     </div>
-                    
-                    <button type="button" id="add-form" class="btn btn-outline-primary">
+                
+                    <button type="button" id="add-form" class="btn btn-outline-primary mt-2">
                         <i class="bi bi-plus-circle"></i> Ajouter un Article
                     </button>
                 </div>
+                
             </div>
         </div>
         

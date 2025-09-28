@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load widget_tweaks %}
 
 {% block title %}
 {% if object %}Modifier {{ object.nom }}{% else %}Nouveau Produit{% endif %} - Shop360
@@ -20,7 +21,7 @@
     <div class="col-md-8">
         <div class="modern-card">
             <div class="card-header">
-                <h5 class="card-title mb-0  py-2">
+                <h5 class="card-title mb-0 py-2">
                     <i class="bi bi-info-circle p-2"></i> Informations du Produit
                 </h5>
             </div>
@@ -28,75 +29,63 @@
                 <form method="post" enctype="multipart/form-data" class="modern-form needs-validation" novalidate>
                     {% csrf_token %}
                     
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-8">
-                            <div class="input-group-modern">
-                                {{ form.nom }}
-                                <label>{{ form.nom.label }}</label>
-                            </div>
+                            <label class="form-label">{{ form.nom.label }}</label>
+                            {{ form.nom|add_class:"form-control" }}
                         </div>
                         <div class="col-md-4">
-                            <div class="mb-3">
-                                {{ form.categorie.label_tag }}
-                                {{ form.categorie }}
-                            </div>
+                            <label class="form-label">{{ form.categorie.label }}</label>
+                            {{ form.categorie|add_class:"form-select" }}
                         </div>
                     </div>
                     
-                    <div class="input-group-modern">
-                        {{ form.description }}
-                        <label>{{ form.description.label }}</label>
+                    <div class="mt-3">
+                        <label class="form-label">{{ form.description.label }}</label>
+                        {{ form.description|add_class:"form-control" }}
                     </div>
                     
-                    <div class="row">
+                    <div class="row g-3 mt-3">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.prix_achat.label_tag }}
-                                <div class="input-group">
-                                    {{ form.prix_achat }}
-                                    <span class="input-group-text">FCFA</span>
-                                </div>
+                            <label class="form-label">{{ form.prix_achat.label }}</label>
+                            <div class="input-group">
+                                {{ form.prix_achat|add_class:"form-control" }}
+                                <span class="input-group-text">FCFA</span>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.prix_vente.label_tag }}
-                                <div class="input-group">
-                                    {{ form.prix_vente }}
-                                    <span class="input-group-text">FCFA</span>
-                                </div>
+                            <label class="form-label">{{ form.prix_vente.label }}</label>
+                            <div class="input-group">
+                                {{ form.prix_vente|add_class:"form-control" }}
+                                <span class="input-group-text">FCFA</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="row">
+                    <div class="row g-3 mt-3">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.quantite_stock.label_tag }}
-                                {{ form.quantite_stock }}
-                            </div>
+                            <label class="form-label">{{ form.quantite_stock.label }}</label>
+                            {{ form.quantite_stock|add_class:"form-control" }}
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.seuil_alerte.label_tag }}
-                                {{ form.seuil_alerte }}
-                            </div>
+                            <label class="form-label">{{ form.seuil_alerte.label }}</label>
+                            {{ form.seuil_alerte|add_class:"form-control" }}
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form.image.label_tag }}
-                        {{ form.image }}
+                    <div class="mt-3">
+                        <label class="form-label">{{ form.image.label }}</label>
+                        {{ form.image|add_class:"form-control" }}
                     </div>
                     
-                    <div class="form-check mb-3">
-                        {{ form.actif }}
+                    <div class="form-check mt-3">
+                        {{ form.actif|add_class:"form-check-input" }}
                         <label class="form-check-label" for="{{ form.actif.id_for_label }}">
                             {{ form.actif.label }}
                         </label>
                     </div>
                     
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-check-circle"></i>
                             {% if object %}Modifier{% else %}Créer{% endif %} le Produit
@@ -111,6 +100,7 @@
             </div>
         </div>
     </div>
+    
     
     <div class="col-md-4">
         <div class="modern-card">

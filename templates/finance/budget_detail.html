@@ -38,17 +38,17 @@
                     </tr>
                     <tr>
                         <th>Montant prévu:</th>
-                        <td><strong class="montant-cfa">{{ budget.montant_prevu|floatformat:0 }}</strong></td>
+                        <td><strong class="montant-cfa">{{ budget.montant_prevu|floatformat:0|intcomma }}</strong></td>
                     </tr>
                     <tr>
                         <th>Montant réalisé:</th>
-                        <td><strong class="montant-cfa">{{ budget.montant_realise|floatformat:0 }}</strong></td>
+                        <td><strong class="montant-cfa">{{ budget.montant_realise|floatformat:0|intcomma }}</strong></td>
                     </tr>
                     <tr>
                         <th>Écart:</th>
                         <td>
                             <strong class="{% if budget.ecart < 0 %}text-danger{% else %}text-success{% endif %}">
-                                {{ budget.ecart|floatformat:0 }} CFA
+                                {{ budget.ecart|floatformat:0|intcomma }} CFA
                             </strong>
                         </td>
                     </tr>
@@ -88,16 +88,16 @@
             <div class="card-body">
                 <div class="row text-center mb-4">
                     <div class="col-md-4">
-                        <h3 class="text-primary">{{ budget.montant_prevu|floatformat:0 }}</h3>
+                        <h3 class="text-primary">{{ budget.montant_prevu|floatformat:0|intcomma }}</h3>
                         <p class="text-muted">CFA Prévu</p>
                     </div>
                     <div class="col-md-4">
-                        <h3 class="text-info">{{ budget.montant_realise|floatformat:0 }}</h3>
+                        <h3 class="text-info">{{ budget.montant_realise|floatformat:0|intcomma }}</h3>
                         <p class="text-muted">CFA Réalisé</p>
                     </div>
                     <div class="col-md-4">
                         <h3 class="{% if budget.ecart < 0 %}text-danger{% else %}text-success{% endif %}">
-                            {{ budget.ecart|floatformat:0 }}
+                            {{ budget.ecart|floatformat:0|intcomma }}
                         </h3>
                         <p class="text-muted">CFA Écart</p>
                     </div>

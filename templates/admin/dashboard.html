@@ -98,17 +98,17 @@
             <button class="btn btn-outline-primary" onclick="location.reload()">
                 <i class="bi bi-arrow-clockwise"></i> Actualiser
             </button>
-            <a href="{% url 'admin:notifications' %}" class="btn btn-warning">
-                <i class="bi bi-bell"></i> Notifications
+            <a href="{% url 'admin:notifications' %}" class="btn btn-warning" style="color: black;">
+                <i class="bi bi-bell" ></i> Notifications
                 {% if alertes|length > 0 %}
                 <span class="badge bg-danger">{{ alertes|length }}</span>
                 {% endif %}
             </a>
-            <a href="{% url 'admin:attendance' %}" class="btn btn-info">
-                <i class="bi bi-clock"></i> Présences
+            <a href="{% url 'admin:attendance' %}" class="btn btn-info" style="color: black;">
+                <i class="bi bi-clock" style="color: black;"></i> Présences
             </a>
-            <a href="{% url 'admin:online_users' %}" class="btn btn-success">
-                <i class="bi bi-people"></i> En ligne ({{ stats.users_online }})
+            <a href="{% url 'admin:online_users' %}" class="btn btn-success" style="color: black;">
+                <i class="bi bi-people" style="color: black;"></i> En ligne ({{ stats.users_online }})
             </a>
         </div>
     </div>
