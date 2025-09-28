@@ -7,14 +7,19 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-box"></i> Gestion des Produits</h1>
-    {% if user.role in 'admin,manager' %}
-    <a href="{% url 'produits:create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouveau Produit
-    </a>
-    {% endif %}
+    <div>
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+        </button>
+        {% if user.role in 'admin,manager' %}
+        <a href="{% url 'produits:create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouveau Produit
+        </a>
+        {% endif %}
+    </div>
+
 </div>
 
-<!-- Filtres et recherche -->
 <!-- Filtres et recherche -->
 <div class="card mb-4">
     <div class="card-body">

@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from .models import User
 from .forms import UserRegistrationForm, UserUpdateForm
-from django.db.models import Sum
 
 
 
@@ -54,10 +53,6 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context['managers_count'] = User.objects.filter(role='manager').count()
         context['cashiers_count'] = User.objects.filter(role='cashier').count()
         return context
-
-
-
-from django.utils import timezone
 
 class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = User

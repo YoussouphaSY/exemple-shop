@@ -33,7 +33,7 @@
             <!-- Sidebar -->
             <nav id="sidebar" class="text-white collapse d-md-block" style="width: 250px; min-height: 100vh;">
                 <div class="position-sticky">
-                    <div class="p-3">
+                    <div class="py-3">
                         <h4 class="text-center">
                             <i class="logo bi-shop"></i> ES
                         </h4>
@@ -42,32 +42,32 @@
                     
                     <div class="nav flex-column">
                         <a href="{% url 'dashboard:index' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
-                            <i class="logo bi-graph-up-arrow"></i> Tableau de Bord
+                            <i class="logo bi-graph-up-arrow px-2"></i> Tableau de Bord
                         </a>
                         
                         <a href="{% url 'produits:list' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'produits' %}active{% endif %}">
-                            <i class="logo bi-phone"></i> Produits
+                            <i class="logo bi-phone px-2"></i> Produits
                         </a>
                         
                         <a href="{% url 'ventes:list' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'ventes' %}active{% endif %}">
-                            <i class="logo bi-cash-coin"></i> Ventes
+                            <i class="logo bi-cash-coin px-2"></i> Ventes
                         </a>
                         
                         <a href="{% url 'achats:list' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'achats' %}active{% endif %}">
-                            <i class="logo bi-truck"></i> Achats
+                            <i class="logo bi-truck px-2"></i> Achats
                         </a>
                         
                         <a href="{% url 'stock:list' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'stock' %}active{% endif %}">
-                            <i class="logo bi-archive"></i> Stock
+                            <i class="logo bi-archive px-2"></i> Stock
                         </a>
                         
                         <a href="{% url 'finance:overview' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'finance' %}active{% endif %}">
-                            <i class="logo bi-wallet2"></i> Finance
+                            <i class="logo bi-wallet2 px-2"></i> Finance
                         </a>
                         
                         {% if user.role in 'admin,manager' %}
                         <a href="{% url 'users:user_list' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'users' %}active{% endif %}">
-                            <i class="logo bi-person-badge"></i> Utilisateurs
+                            <i class="logo bi-person-badge px-2"></i> Utilisateurs
                         </a>
                         {% endif %}
                         
@@ -75,11 +75,11 @@
                         
                         <div class="dropdown">
                             <a class="nav-link text-white dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="logo bi-person-gear"></i> {{ user.get_full_name|default:user.username }}
+                                <i class="logo bi-person-gear px-2"></i> {{ user.get_full_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profil</a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li><hr class="dropdown-divider px-2"></li>
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}" target="_blank">Administration</a></li>
                                 <li><a class="dropdown-item" href="{% url 'logout' %}">Déconnexion</a></li>
                             </ul>

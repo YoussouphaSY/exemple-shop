@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}Vente {{ vente.numero }} - Shop360{% endblock %}
 
@@ -73,11 +74,11 @@
                             </tr>
                             <tr>
                                 <th>Total HT:</th>
-                                <td>{{ vente.total_ht }} FCFA</td>
+                                <td>{{ vente.total_ht|intcomma }} FCFA</td>
                             </tr>
                             <tr>
                                 <th>Total TTC:</th>
-                                <td><strong class="text-success fs-5">{{ vente.total_ttc }} FCFA</strong></td>
+                                <td><strong class="text-success fs-5">{{ vente.total_ttc|intcomma }} FCFA</strong></td>
                             </tr>
                         </table>
                     </div>
@@ -115,11 +116,11 @@
                                     <strong>{{ item.produit.nom }}</strong>
                                     <br><small class="text-muted">{{ item.produit.categorie.nom }}</small>
                                 </td>
-                                <td>{{ item.prix_unitaire }} FCFA</td>
+                                <td>{{ item.prix_unitaire|intcomma }} FCFA</td>
                                 <td>
                                     <span class="badge bg-primary">{{ item.quantite }}</span>
                                 </td>
-                                <td><strong>{{ item.total_ttc }} FCFA</strong></td>
+                                <td><strong>{{ item.total_ttc|intcomma }} FCFA</strong></td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -130,7 +131,7 @@
                         <tfoot>
                             <tr class="table-active">
                                 <th colspan="3">Total</th>
-                                <th>{{ vente.total_ttc }} FCFA</th>
+                                <th>{{ vente.total_ttc|intcomma }} FCFA</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -157,11 +158,11 @@
                 <hr>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Sous-total HT:</span>
-                    <span>{{ vente.total_ht }} FCFA</span>
+                    <span>{{ vente.total_ht|intcomma }} FCFA</span>
                 </div>
                 <div class="d-flex justify-content-between">
                     <strong>Total TTC:</strong>
-                    <strong class="text-success">{{ vente.total_ttc }} FCFA</strong>
+                    <strong class="text-success">{{ vente.total_ttc|intcomma }} FCFA</strong>
                 </div>
             </div>
         </div>

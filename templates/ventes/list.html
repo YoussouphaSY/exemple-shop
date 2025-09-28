@@ -8,6 +8,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-cart3"></i> Gestion des Ventes</h1>
     <div>
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+        </button>
         <a href="{% url 'ventes:caisse' %}" class="btn btn-success">
             <i class="bi bi-cart-plus"></i> Nouvelle Vente
         </a>
