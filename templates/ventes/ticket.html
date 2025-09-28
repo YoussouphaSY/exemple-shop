@@ -1,5 +1,7 @@
 <!DOCTYPE html>
+{% load humanize %}
 <html lang="fr">
+    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -149,7 +151,7 @@
             {% endif %}
             <tr>
                 <td colspan="3" style="font-size: 10px; color: #666; padding-left: 10px;">
-                    {{ item.prix_unitaire }} FCFA x {{ item.quantite }}
+                    {{ item.prix_unitaire|intcomma  }} FCFA x {{ item.quantite }}
                 </td>
             </tr>
             {% endfor %}
@@ -160,7 +162,7 @@
     <div class="total-section">
         <div class="total-line">
             <span>Sous-total HT:</span>
-            <span>{{ vente.total_ht }} FCFA</span>
+            <span>{{ vente.total_ht|intcomma  }} FCFA</span>
         </div>
         <div class="total-line">
             <span>TVA:</span>
@@ -168,7 +170,7 @@
         </div>
         <div class="total-line total-final">
             <span>TOTAL TTC:</span>
-            <span>{{ vente.total_ttc }} FCFA</span>
+            <span>{{ vente.total_ttc|intcomma  }} FCFA</span>
         </div>
     </div>
     

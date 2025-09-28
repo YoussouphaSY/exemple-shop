@@ -284,7 +284,8 @@ function addToCart(productId, productName, price, stock) {
     const existingItem = cart.find(item => item.id === productId);
     
     if (existingItem) {
-        if (existingItem.quantity < stock) {
+        const stockInt = parseInt(stock); // convertir le stock en entier
+        if (existingItem.quantity < stockInt) {
             existingItem.quantity++;
             showNotification(`${productName} ajouté au panier`, 'success');
         } else {
@@ -297,11 +298,11 @@ function addToCart(productId, productName, price, stock) {
             name: productName,
             price: price,
             quantity: 1,
-            stock: stock
+            stock: parseInt(stock)  // convertir ici aussi
         });
         showNotification(`${productName} ajouté au panier`, 'success');
     }
-    
+
     updateCartDisplay();
 }
 
