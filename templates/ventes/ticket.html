@@ -140,7 +140,7 @@
             <tr>
                 <td class="item-name">{{ item.produit.nom|truncatechars:25 }}</td>
                 <td class="item-qty">{{ item.quantite }}</td>
-                <td class="item-price">{{ item.total_ttc }} FCFA</td>
+                <td class="item-price">{{ item.total_ttc|intcomma }} FCFA</td>
             </tr>
             {% if item.produit.nom|length > 25 %}
             <tr>

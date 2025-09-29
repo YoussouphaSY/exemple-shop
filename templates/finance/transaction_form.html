@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load widget_tweaks %}
 
 {% block title %}
 {% if object %}Modifier Transaction{% else %}Nouvelle Transaction{% endif %} - Shop360
@@ -15,7 +16,6 @@
         <i class="bi bi-arrow-left"></i> Retour
     </a>
 </div>
-
 <div class="row">
     <div class="col-md-8">
         <div class="modern-card">
@@ -24,60 +24,56 @@
                     <i class="bi bi-info-circle p-2"></i> Détails de la Transaction
                 </h5>
             </div>
+
             <div class="card-body p-3">
-                <form method="post" enctype="multipart/form-data" class="modern-form">
+                <form method="post" enctype="multipart/form-data" class="modern-form needs-validation" novalidate>
                     {% csrf_token %}
                     
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.type.label_tag }}
-                                {{ form.type }}
-                            </div>
+                            <label class="form-label">{{ form.type.label }}</label>
+                            {{ form.type|add_class:"form-select" }}
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.categorie.label_tag }}
-                                {{ form.categorie }}
-                            </div>
+                            <label class="form-label">{{ form.categorie.label }}</label>
+                            {{ form.categorie|add_class:"form-select" }}
                         </div>
                     </div>
                     
-                    <div class="row">
+                    <div class="row g-3 mt-3">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.montant.label_tag }}
-                                <div class="input-group">
-                                    {{ form.montant }}
-                                    <span class="input-group-text">FCFA</span>
-                                </div>
+                            <label class="form-label">{{ form.montant.label }}</label>
+                            <div class="input-group">
+                                {{ form.montant|add_class:"form-control" }}
+                                <span class="input-group-text">FCFA</span>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ form.date_valeur.label_tag }}
-                                {{ form.date_valeur }}
-                            </div>
+                            <label class="form-label">{{ form.date_valeur.label }}</label>
+                            {{ form.date_valeur|add_class:"form-control" }}
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form.description.label_tag }}
-                        {{ form.description }}
+                    <div class="mt-3">
+                        <label class="form-label">{{ form.description.label }}</label>
+                        {{ form.description|add_class:"form-control" }}
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form.piece_jointe.label_tag }}
-                        {{ form.piece_jointe }}
+                    <div class="mt-3">
+                        <label class="form-label">{{ form.piece_jointe.label }}</label>
+                        {{ form.piece_jointe|add_class:"form-control" }}
                         <div class="form-text">Formats acceptés: PDF, JPG, PNG (max 5MB)</div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-check-circle"></i>
-                        {% if object %}Modifier{% else %}Créer{% endif %} la Transaction
-                    </button>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i>
+                            {% if object %}Modifier{% else %}Créer{% endif %} la Transaction
+                        </button>
+                    </div>
                 </form>
             </div>
+            
         </div>
     </div>
     
@@ -95,7 +91,7 @@
                 
                 <div class="mt-3">
                     <h6>Impact sur le solde:</h6>
-                    <div id="impact-preview" class="text-muted">
+                    <div id="impact-preview" class="text-muted" style="color: darkgoldenrod; font-weight: bold;">
                         Solde actuel: {{ solde_actuel|floatformat:0 }} FCFA
                     </div>
                 </div>
