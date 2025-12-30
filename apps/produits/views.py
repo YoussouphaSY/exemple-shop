@@ -61,7 +61,7 @@ class ProduitCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     template_name = 'produits/form.html'
     
     def test_func(self):
-        return self.request.user.role in ['admin', 'manager']
+        return self.request.user.role in ['admin', 'manager', 'Administrateur', 'Gestionnaire']
     
     def form_valid(self, form):
         messages.success(self.request, 'Produit créé avec succès!')
@@ -74,7 +74,7 @@ class ProduitUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'produits/form.html'
     
     def test_func(self):
-        return self.request.user.role in ['admin', 'manager']
+        return self.request.user.role in ['admin', 'manager', 'Administrateur', 'Gestionnaire']
     
     def form_valid(self, form):
         messages.success(self.request, 'Produit modifié avec succès!')
@@ -87,7 +87,7 @@ class ProduitDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('produits:list')
     
     def test_func(self):
-        return self.request.user.role == 'admin'
+        return self.request.user.role in ['admin', 'Administrateur']
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Produit supprimé avec succès!')
@@ -97,7 +97,7 @@ class ProduitDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 @method_decorator(csrf_exempt, name='dispatch')
 class ProduitQuickCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
-        return self.request.user.role in ['admin', 'manager']
+        return self.request.user.role in ['admin', 'manager', 'Administrateur', 'Gestionnaire']
     
     def post(self, request):
         from .forms import ProduitQuickForm
@@ -133,4 +133,4 @@ class CategorieCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     success_url = reverse_lazy('produits:categories')
     
     def test_func(self):
-        return self.request.user.role in ['admin', 'manager']
+        return self.request.user.role in ['admin', 'manager', 'Administrateur', 'Gestionnaire']

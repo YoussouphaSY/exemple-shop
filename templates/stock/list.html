@@ -30,8 +30,10 @@
 {% if stock_critique %}
 <div class="alert alert-warning">
     <i class="bi bi-exclamation-triangle"></i>
-    <strong>Attention !</strong> {{ stock_critique.count }} produit{{ stock_critique.count|pluralize }} en stock critique.
-    <button class="btn btn-sm btn-outline-warning ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#stockCritique">
+    <strong>Attention !</strong> {{ stock_critique.count }} produit{{ stock_critique.count|pluralize }} en stock
+    critique.
+    <button class="btn btn-sm btn-outline-warning ms-2" type="button" data-bs-toggle="collapse"
+        data-bs-target="#stockCritique">
         Voir les détails
     </button>
 </div>
@@ -64,7 +66,8 @@
                             </td>
                             <td>{{ produit.seuil_alerte }}</td>
                             <td>
-                                <a href="{% url 'achats:create' %}?produit={{ produit.id }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'achats:create' %}?produit={{ produit.id }}"
+                                    class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-cart-plus"></i> Commander
                                 </a>
                             </td>
@@ -163,7 +166,8 @@
                         <td>
                             <div class="d-flex align-items-center">
                                 {% if produit.image %}
-                                <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-thumbnail me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-thumbnail me-2"
+                                    style="width: 40px; height: 40px; object-fit: cover;">
                                 {% endif %}
                                 <div>
                                     <strong>{{ produit.nom }}</strong>
@@ -177,7 +181,8 @@
                             <span class="badge bg-info">{{ produit.categorie.nom }}</span>
                         </td>
                         <td>
-                            <span class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %} fs-6">
+                            <span
+                                class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %} fs-6">
                                 {{ produit.quantite_stock }}
                             </span>
                         </td>
@@ -186,27 +191,30 @@
                         <td><strong>{{ produit.prix_vente|intcomma }} FCFA</strong></td>
                         <td>
                             {% load math_filters %}
-                            <strong class="montant-cfa">{{ produit.prix_achat|mul:produit.quantite_stock|floatformat:0|intcomma }}</strong>
+                            <strong class="montant-cfa">{{
+                                produit.prix_achat|mul:produit.quantite_stock|floatformat:0|intcomma }}</strong>
                         </td>
                         <td>
                             {% if produit.stock_critique %}
                             <span class="badge bg-danger">Critique</span>
-                            {% elif produit.quantite_stock < 10 %}
-                            <span class="badge bg-warning">Faible</span>
-                            {% else %}
-                            <span class="badge bg-success">OK</span>
-                            {% endif %}
+                            {% elif produit.quantite_stock < 10 %} <span class="badge bg-warning">Faible</span>
+                                {% else %}
+                                <span class="badge bg-success">OK</span>
+                                {% endif %}
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{% url 'produits:detail' produit.slug %}" class="btn btn-outline-info" title="Voir">
+                                <a href="{% url 'produits:detail' produit.pk %}" class="btn btn-outline-info"
+                                    title="Voir">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if user.role in 'admin,manager' %}
-                                <a href="{% url 'stock:ajustement' %}?produit={{ produit.id }}" class="btn btn-outline-warning" title="Ajuster">
+                                <a href="{% url 'stock:ajustement' %}?produit={{ produit.id }}"
+                                    class="btn btn-outline-warning" title="Ajuster">
                                     <i class="bi bi-sliders"></i>
                                 </a>
-                                <a href="{% url 'achats:create' %}?produit={{ produit.id }}" class="btn btn-outline-primary" title="Commander">
+                                <a href="{% url 'achats:create' %}?produit={{ produit.id }}"
+                                    class="btn btn-outline-primary" title="Commander">
                                     <i class="bi bi-cart-plus"></i>
                                 </a>
                                 {% endif %}
@@ -239,11 +247,11 @@
             <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
         </li>
         {% endif %}
-        
+
         <li class="page-item active">
             <span class="page-link">{{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
         </li>
-        
+
         {% if page_obj.has_next %}
         <li class="page-item">
             <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>

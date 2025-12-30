@@ -54,8 +54,8 @@ class AchatItemForm(forms.ModelForm):
 AchatItemFormSet = inlineformset_factory(
     Achat, AchatItem,
     form=AchatItemForm,
-    extra=1,
-    min_num=1,
+    extra=1,  # Une ligne vide par défaut
+    min_num=0, # Pas de minimum forcé en plus de l'extra
     validate_min=True,
     can_delete=True
 )

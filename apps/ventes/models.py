@@ -110,6 +110,7 @@ class VenteItem(models.Model):
     produit = models.ForeignKey(Produit, on_delete=models.CASCADE)
     quantite = models.PositiveIntegerField()
     prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
+    prix_original = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Prix de vente standard du produit")
     total_ht = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_ttc = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     taux_tva = models.DecimalField(max_digits=5, decimal_places=2, default=0)
@@ -122,7 +123,25 @@ class VenteItem(models.Model):
     def __str__(self):
         return f"{self.produit.nom} x{self.quantite}"
     
+    @property
+    def reduction_accordee(self):
+        """Calcule la réduction accordée par rapport au prix original."""
+        if self.prix_original and self.prix_original > self.prix_unitaire:
+            return self.prix_original - self.prix_unitaire
+        return 0
+    
+    @property
+    def pourcentage_reduction(self):
+        """Calcule le pourcentage de réduction accordé."""
+        if self.prix_original and self.prix_original > 0:
+            return ((self.prix_original - self.prix_unitaire) / self.prix_original) * 100
+        return 0
+    
     def save(self, *args, **kwargs):
+        # Sauvegarder le prix original si non spécifié
+        if not self.prix_original:
+            self.prix_original = self.produit.prix_vente
+        
         # Use product's sale price if not specified
         if not self.prix_unitaire:
             self.prix_unitaire = self.produit.prix_vente

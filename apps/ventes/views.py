@@ -127,6 +127,7 @@ class CaisseView(LoginRequiredMixin, View):
     def post(self, request):
         try:
             data = json.loads(request.body)
+            print(f"DEBUG: Données reçues: {data}")  # DEBUG
             
             # Create sale
             vente = Vente.objects.create(
@@ -135,19 +136,23 @@ class CaisseView(LoginRequiredMixin, View):
                 mode_paiement=data.get('mode_paiement', 'especes'),
                 vendeur=request.user
             )
+            print(f"DEBUG: Vente créée: {vente.numero}")  # DEBUG
             
             # Create sale items
             for item_data in data['items']:
+                print(f"DEBUG: Item data: {item_data}")  # DEBUG
                 produit = Produit.objects.get(pk=item_data['produit_id'])
                 VenteItem.objects.create(
                     vente=vente,
                     produit=produit,
                     quantite=item_data['quantite'],
-                    prix_unitaire=item_data['prix_unitaire']
+                    prix_unitaire=item_data['prix_unitaire'],
+                    prix_original=item_data.get('prix_original', produit.prix_vente)
                 )
             
             # Finalize sale
             vente.finaliser()
+            print(f"DEBUG: Vente finalisée")  # DEBUG
             
             return JsonResponse({
                 'success': True,
@@ -156,6 +161,9 @@ class CaisseView(LoginRequiredMixin, View):
             })
             
         except Exception as e:
+            import traceback
+            print(f"ERROR: {str(e)}")  # DEBUG
+            print(f"TRACEBACK: {traceback.format_exc()}")  # DEBUG
             return JsonResponse({
                 'success': False,
                 'error': str(e)

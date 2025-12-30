@@ -2,7 +2,7 @@
 
 Shop360 est une application web complète de gestion de boutique développée avec Django. Elle offre une vue 360° sur votre business : stocks, ventes, achats, finances et analytics.
 
-## 🚀 Fonctionnalités
+## Fonctionnalités
 
 ### Gestion des Produits
 - CRUD complet des produits avec catégories
@@ -53,7 +53,7 @@ Shop360 est une application web complète de gestion de boutique développée av
 - Gestion des profils
 - Authentification sécurisée
 
-## 🛠️ Technologies
+## Technologies
 
 - **Backend**: Django 4.2, Django REST Framework
 - **Frontend**: Bootstrap 5, Chart.js
@@ -62,7 +62,7 @@ Shop360 est une application web complète de gestion de boutique développée av
 - **Exports**: openpyxl, reportlab
 - **Formulaires**: django-crispy-forms
 
-## 📦 Installation
+## Installation
 
 ### Prérequis
 - Python 3.11+
@@ -122,7 +122,7 @@ Les fixtures incluent :
 - **3 fournisseurs** fictifs
 - **Catégories** prédéfinies
 
-## 🎯 Utilisation
+## Utilisation
 
 ### Rôles et Permissions
 
@@ -173,7 +173,7 @@ POST /api-token-auth/
 Authorization: Token your-token-here
 ```
 
-## 🧪 Tests
+## Tests
 
 ```bash
 # Lancer tous les tests
@@ -186,7 +186,7 @@ coverage report
 coverage html  # Rapport HTML dans htmlcov/
 ```
 
-## 📊 Structure du Projet
+## Structure du Projet
 
 ```
 shop360/
@@ -215,7 +215,6 @@ shop360/
 ├── fixtures/                   # Données d'exemple
 └── requirements.txt
 ```
-
 
 ---
 

@@ -12,7 +12,7 @@
             <i class="bi bi-arrow-left"></i> Retour
         </a>
         {% if user.role in 'admin,manager' %}
-        <a href="{% url 'produits:edit' produit.slug %}" class="btn btn-warning">
+        <a href="{% url 'produits:update' produit.pk %}" class="btn btn-warning">
             <i class="bi bi-pencil" style="color: black;"></i> Modifier
         </a>
         {% endif %}
@@ -36,11 +36,12 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0"><i class="bi bi-info-circle p-2" style="color: black;"></i> Informations Produit</h5>
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle p-2" style="color: black;"></i> Informations
+                    Produit</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -76,7 +77,8 @@
                             <tr>
                                 <th>Stock actuel:</th>
                                 <td>
-                                    <span class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %} fs-6">
+                                    <span
+                                        class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %} fs-6">
                                         {{ produit.quantite_stock }} unités
                                     </span>
                                 </td>
@@ -102,7 +104,7 @@
                         </table>
                     </div>
                 </div>
-                
+
                 {% if produit.description %}
                 <div class="mt-3">
                     <h6>Description:</h6>
@@ -117,7 +119,8 @@
 <!-- Mouvements de stock récents -->
 <div class="card mt-4">
     <div class="card-header">
-        <h5 class="card-title mb-0"><i class="bi bi-arrow-repeat p-2" style="color: black;"></i> Mouvements de Stock Récents</h5>
+        <h5 class="card-title mb-0"><i class="bi bi-arrow-repeat p-2" style="color: black;"></i> Mouvements de Stock
+            Récents</h5>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -136,7 +139,8 @@
                     <tr>
                         <td>{{ mouvement.date|date:"d/m/Y H:i" }}</td>
                         <td>
-                            <span class="badge {% if mouvement.type == 'ENTREE' %}bg-success{% else %}bg-danger{% endif %}">
+                            <span
+                                class="badge {% if mouvement.type == 'ENTREE' %}bg-success{% else %}bg-danger{% endif %}">
                                 {{ mouvement.get_type_display }}
                             </span>
                         </td>

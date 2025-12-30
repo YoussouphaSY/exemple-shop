@@ -29,7 +29,7 @@
 
 <form method="post" id="achatForm" class="modern-form">
     {% csrf_token %}
-    
+
     <div class="row">
         <div class="col-md-8">
             <!-- Informations générales -->
@@ -42,11 +42,12 @@
                 <div class="card-body p-3">
                     {{ form.fournisseur|as_crispy_field }}
                     <div class="mt-3">
-                        <button type="button" class="btn btn-outline-success w-100" data-bs-toggle="modal" data-bs-target="#fournisseurModal">
+                        <button type="button" class="btn btn-outline-success w-100" data-bs-toggle="modal"
+                            data-bs-target="#fournisseurModal">
                             <i class="bi bi-plus-circle"></i> Nouveau Fournisseur
                         </button>
                     </div>
-            
+
                     <div class="row mt-3">
                         <div class="col-md-6">
                             {{ form.date_livraison|as_crispy_field }}
@@ -55,78 +56,114 @@
                             {{ form.statut|as_crispy_field }}
                         </div>
                     </div>
-            
+
                     <div class="mt-3">
                         {{ form.note|as_crispy_field }}
                     </div>
                 </div>
             </div>
-            
-            
+
+
             <!-- Articles -->
             <div class="modern-card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center px-3">
-                        <h5 class="card-title mb-0 p-2"><i class="bi bi-list-ul p-2" style="color: black;"></i> Articles</h5>
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#produitModal" style="color: black;">
+                        <h5 class="card-title mb-0 p-2"><i class="bi bi-list-ul p-2" style="color: black;"></i> Articles
+                        </h5>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#produitModal" style="color: black;">
                             <i class="bi bi-plus-circle" style="color: black;"></i> Nouveau Produit
                         </button>
                     </div>
                 </div>
                 <div class="card-body p-3">
                     {{ formset.management_form }}
-                    <div id="formset-container">
-                        {% for form in formset %}
-                        <div class="formset-form border rounded p-3 mb-3 fade-in">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">{{ form.produit.label }}</label>
-                                    {{ form.produit|add_class:"form-select" }}
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">{{ form.quantite.label }}</label>
-                                    {{ form.quantite|add_class:"form-control" }}
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">{{ form.quantite_recue.label }}</label>
-                                    {{ form.quantite_recue|add_class:"form-control" }}
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">{{ form.prix_unitaire.label }}</label>
-                                    <div class="input-group">
-                                        {{ form.prix_unitaire|add_class:"form-control" }}
-                                        <span class="input-group-text">FCFA</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-1">
-                                    <label class="form-label">Total</label>
-                                    <input type="text" class="form-control total-item" readonly>
-                                    {% if formset.can_delete %}
-                                    <div class="form-check mt-2">
-                                        {{ form.DELETE }}
-                                        <label class="form-check-label text-danger">Supprimer</label>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {{ form.id }}
-                        </div>
-                        {% endfor %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="achatTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40%">Produit</th>
+                                    <th style="width: 15%">Quantité</th>
+                                    <th style="width: 15%">Reçue</th>
+                                    <th style="width: 20%">P.U. (FCFA)</th>
+                                    <th style="width: 10%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="formset-container">
+                                {% for form in formset %}
+                                <tr class="formset-form fade-in">
+                                    <td>
+                                        {{ form.produit|add_class:"form-select form-select-sm" }}
+                                    </td>
+                                    <td>
+                                        {{ form.quantite|add_class:"form-control form-control-sm" }}
+                                    </td>
+                                    <td>
+                                        {{ form.quantite_recue|add_class:"form-control form-control-sm" }}
+                                    </td>
+                                    <td>
+                                        {{ form.prix_unitaire|add_class:"form-control form-control-sm" }}
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <input type="hidden" class="total-item">
+                                        {{ form.id }}
+                                        {% if formset.can_delete %}
+                                        <div class="d-none">{{ form.DELETE }}</div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-row"
+                                            title="Supprimer">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    
-                    <button type="button" id="add-form" class="btn btn-outline-primary mt-3">
-                        <i class="bi bi-plus-circle" style="color: black;"></i> Ajouter un Article
+
+                    <!-- Template caché pour nouvelles lignes -->
+                    <div id="empty-form" class="d-none">
+                        <table>
+                            <tr class="formset-form fade-in">
+                                <td>
+                                    {{ formset.empty_form.produit|add_class:"form-select form-select-sm" }}
+                                </td>
+                                <td>
+                                    {{ formset.empty_form.quantite|add_class:"form-control form-control-sm" }}
+                                </td>
+                                <td>
+                                    {{ formset.empty_form.quantite_recue|add_class:"form-control form-control-sm" }}
+                                </td>
+                                <td>
+                                    {{ formset.empty_form.prix_unitaire|add_class:"form-control form-control-sm" }}
+                                </td>
+                                <td class="text-center align-middle">
+                                    <input type="hidden" class="total-item">
+                                    {{ formset.empty_form.id }}
+                                    <div class="d-none">{{ formset.empty_form.DELETE }}</div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-row"
+                                        title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <button type="button" id="add-form" class="btn btn-outline-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> Ajouter un Article
                     </button>
                 </div>
-                
+
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <!-- Résumé -->
             <div class="modern-card sticky-top" style="top: 2rem;">
                 <div class="card-header">
-                    <h5 class="card-title mb-0 p-2"><i class="bi p-2 bi-calculator" style="color: black;"></i> Résumé</h5>
+                    <h5 class="card-title mb-0 p-2"><i class="bi p-2 bi-calculator" style="color: black;"></i> Résumé
+                    </h5>
                 </div>
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between mb-2">
@@ -156,7 +193,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Aide -->
             <div class="modern-card mt-3">
                 <div class="card-header">
@@ -241,12 +278,18 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Catégorie *</label>
-                        <select name="categorie" class="form-select" required>
-                            <option value="">Sélectionner une catégorie</option>
-                            {% for categorie in categories %}
-                            <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="input-group">
+                            <select name="categorie" class="form-select" id="produitCategorieSelect" required>
+                                <option value="">Sélectionner une catégorie</option>
+                                {% for categorie in categories %}
+                                <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal"
+                                data-bs-target="#categorieModal">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
@@ -283,166 +326,328 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Nouvelle Catégorie -->
+<div class="modal fade" id="categorieModal" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-tag"></i> Nouvelle Catégorie</h5>
+                <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#produitModal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categorieForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nom *</label>
+                        <input type="text" name="nom" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+                    data-bs-target="#produitModal">Retour</button>
+                <button type="button" class="btn btn-primary" onclick="createCategorie()">
+                    <i class="bi bi-check-circle"></i> Créer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let formCount = parseInt(document.querySelector('#id_form-TOTAL_FORMS').value);
-    
-    // Calcul automatique des totaux
-    function calculateTotals() {
-        let totalHT = 0;
-        let nbArticles = 0;
-        let quantiteTotale = 0;
-        
-        document.querySelectorAll('.formset-form').forEach(function(form) {
-            const quantite = parseFloat(form.querySelector('[name$="-quantite"]').value) || 0;
-            const prix = parseFloat(form.querySelector('[name$="-prix_unitaire"]').value) || 0;
-            const total = quantite * prix;
-            
-            form.querySelector('.total-item').value = total.toLocaleString() + ' FCFA';
-            
-            if (quantite > 0 && prix > 0) {
-                totalHT += total;
-                nbArticles++;
-                quantiteTotale += quantite;
-            }
-        });
-        
-        document.getElementById('nb-articles').textContent = nbArticles;
-        document.getElementById('quantite-totale').textContent = quantiteTotale;
-        document.getElementById('total-ht').textContent = totalHT.toLocaleString() + ' CFA';
-        document.getElementById('total-ttc').textContent = totalHT.toLocaleString() + ' CFA';
-    }
-    
-    // Événements pour recalcul automatique
-    document.addEventListener('input', function(e) {
-        if (e.target.name && (e.target.name.includes('quantite') || e.target.name.includes('prix_unitaire'))) {
-            calculateTotals();
-        }
-    });
-    
-    // Ajouter un nouveau formulaire
-    document.getElementById('add-form').addEventListener('click', function() {
-        const container = document.getElementById('formset-container');
-        const emptyForm = container.querySelector('.formset-form').cloneNode(true);
-        
-        // Nettoyer le nouveau formulaire
-        emptyForm.querySelectorAll('input, select').forEach(function(input) {
-            if (input.type !== 'hidden') {
-                input.value = '';
-            }
-            input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
-            input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
-        });
-        
-        container.appendChild(emptyForm);
-        formCount++;
-        document.querySelector('#id_form-TOTAL_FORMS').value = formCount;
-    });
-    
-    // Calcul initial
-    calculateTotals();
-});
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log("Script Achat chargé");
+        let formCount = parseInt(document.querySelector('#id_a_items-TOTAL_FORMS')?.value || document.querySelector('#id_form-TOTAL_FORMS')?.value || 0);
+        console.log("Nombre de forms initial:", formCount);
 
-// Créer un nouveau fournisseur
-function createFournisseur() {
-    const form = document.getElementById('fournisseurForm');
-    const formData = new FormData(form);
-    
-    fetch('{% url "achats:fournisseur_quick_create" %}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Ajouter le nouveau fournisseur à la liste
-            const select = document.getElementById('id_fournisseur');
-            const option = new Option(data.fournisseur.nom, data.fournisseur.id);
-            select.add(option);
-            select.value = data.fournisseur.id;
-            
-            // Fermer la modal
-            bootstrap.Modal.getInstance(document.getElementById('fournisseurModal')).hide();
-            
-            // Reset form
-            form.reset();
-            
-            // Show success message
-            showNotification('Fournisseur créé avec succès!', 'success');
-        } else {
-            showNotification('Erreur lors de la création', 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Une erreur est survenue', 'danger');
-    });
-}
+        // Calcul automatique des totaux
+        function calculateTotals() {
+            let totalHT = 0;
+            let nbArticles = 0;
+            let quantiteTotale = 0;
 
-// Créer un nouveau produit
-function createProduit() {
-    const form = document.getElementById('produitForm');
-    const formData = new FormData(form);
-    
-    fetch('{% url "produits:quick_create" %}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Ajouter le nouveau produit aux selects
-            document.querySelectorAll('[name$="-produit"]').forEach(select => {
-                const option = new Option(data.produit.nom, data.produit.id);
-                select.add(option);
+            console.log("Calcul des totaux...");
+
+            const rows = document.querySelectorAll('.formset-form');
+            rows.forEach(function (row) {
+                // Ignorer la ligne modèle dans #empty-form
+                if (row.closest('#empty-form')) return;
+
+                // Ignorer les lignes cachées/supprimées
+                if (row.classList.contains('d-none')) return;
+
+                // Ignorer si supprimé par checkbox
+                const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                if (deleteInput && deleteInput.checked) return;
+
+                const qteInput = row.querySelector('[name$="-quantite"]');
+                const prixInput = row.querySelector('[name$="-prix_unitaire"]');
+
+                if (!qteInput || !prixInput) return; // Sécurité
+
+                const quantite = parseFloat(qteInput.value) || 0;
+                const prix = parseFloat(prixInput.value) || 0;
+                const total = quantite * prix;
+
+                const totalInput = row.querySelector('.total-item');
+                if (totalInput) {
+                    totalInput.value = total.toLocaleString('fr-FR') + ' FCFA';
+                }
+
+                if (quantite > 0 && prix > 0) {
+                    totalHT += total;
+                    if (quantite > 0) nbArticles++; // Compter seulement si qte > 0
+                    quantiteTotale += quantite;
+                }
             });
-            
-            // Fermer la modal
-            bootstrap.Modal.getInstance(document.getElementById('produitModal')).hide();
-            
-            // Reset form
-            form.reset();
-            
-            // Show success message
-            showNotification('Produit créé avec succès!', 'success');
-        } else {
-            showNotification('Erreur lors de la création', 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Une erreur est survenue', 'danger');
-    });
-}
 
-// Fonction de notification
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} notification`;
-    notification.innerHTML = `
+            // Mise à jour de l'affichage
+            const updateEl = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            };
+
+            updateEl('nb-articles', nbArticles);
+            updateEl('quantite-totale', quantiteTotale);
+            updateEl('total-ht', totalHT.toLocaleString('fr-FR') + ' CFA');
+            updateEl('total-ttc', totalHT.toLocaleString('fr-FR') + ' CFA');
+        }
+
+        // Événements pour recalcul automatique (délégation)
+        document.getElementById('achatTable')?.addEventListener('input', function (e) {
+            if (e.target.name && (e.target.name.includes('quantite') || e.target.name.includes('prix_unitaire'))) {
+                calculateTotals();
+            }
+        });
+
+        // Ajouter un nouveau formulaire
+        const addBtn = document.getElementById('add-form');
+        if (addBtn) {
+            addBtn.addEventListener('click', function (e) {
+                e.preventDefault(); // Empêcher submit éventuel
+                console.log("Clic ajouter article");
+
+                try {
+                    const container = document.getElementById('formset-container');
+                    const emptyFormDiv = document.getElementById('empty-form');
+                    const totalFormsInput = document.querySelector('#id_a_items-TOTAL_FORMS') || document.querySelector('#id_form-TOTAL_FORMS');
+
+                    if (!container || !emptyFormDiv || !totalFormsInput) {
+                        console.error("Éléments manquants pour ajout ligne");
+                        return;
+                    }
+
+                    // Utiliser le template empty_form
+                    // Remplacer __prefix__ dans le HTML string AVANT de créer les éléments DOM
+                    // C'est plus sûr pour éviter les problèmes d'attributs
+                    let newHtml = emptyFormDiv.innerHTML.replace(/__prefix__/g, formCount);
+
+                    // Création DOM
+                    const tempDiv = document.createElement('tbody'); // Utiliser tbody comme conteneur temp pour parser les TR
+                    tempDiv.innerHTML = newHtml;
+
+                    // Extraction de la ligne TR (peut être imbriquée dans un table/tbody dans le template)
+                    let newRow = tempDiv.querySelector('tr');
+
+                    if (!newRow) {
+                        // Fallback si la structure est différente
+                        console.error("Impossible de trouver TR dans le template");
+                        return;
+                    }
+
+                    // Nettoyage final des inputs (au cas où value="None" traîne)
+                    newRow.querySelectorAll('input').forEach(input => {
+                        if (input.type !== 'hidden') input.value = '';
+                    });
+
+                    container.appendChild(newRow);
+
+                    // Mise à jour compteur
+                    formCount++;
+                    totalFormsInput.value = formCount;
+                    console.log("Nouvelle ligne ajoutée, Total forms:", formCount);
+
+                } catch (err) {
+                    console.error("Erreur ajout ligne:", err);
+                    alert("Erreur lors de l'ajout de la ligne. Vérifiez la console.");
+                }
+            });
+        }
+
+        // Gérer la suppression (délégation)
+        document.getElementById('achatTable')?.addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.delete-row');
+            if (deleteBtn) {
+                e.preventDefault();
+                const row = deleteBtn.closest('tr');
+                if (!row) return;
+
+                const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                if (deleteInput) {
+                    deleteInput.checked = true;
+                    row.classList.add('d-none');
+                } else {
+                    row.remove();
+                }
+                calculateTotals();
+            }
+        });
+
+        // Calcul initial
+        setTimeout(calculateTotals, 500); // Petit délai pour assurer le chargement complet
+    });
+
+    // Créer un nouveau fournisseur
+    function createFournisseur() {
+        const form = document.getElementById('fournisseurForm');
+        const formData = new FormData(form);
+
+        fetch('{% url "achats:fournisseur_quick_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Ajouter le nouveau fournisseur à la liste
+                    const select = document.getElementById('id_fournisseur');
+                    const option = new Option(data.fournisseur.nom, data.fournisseur.id);
+                    select.add(option);
+                    select.value = data.fournisseur.id;
+
+                    // Fermer la modal
+                    bootstrap.Modal.getInstance(document.getElementById('fournisseurModal')).hide();
+
+                    // Reset form
+                    form.reset();
+
+                    // Show success message
+                    showNotification('Fournisseur créé avec succès!', 'success');
+                } else {
+                    showNotification('Erreur lors de la création', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Une erreur est survenue', 'danger');
+            });
+    }
+
+    // Créer un nouveau produit
+    function createProduit() {
+        const form = document.getElementById('produitForm');
+        const formData = new FormData(form);
+
+        fetch('{% url "produits:quick_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Ajouter le nouveau produit aux selects
+                    document.querySelectorAll('[name$="-produit"]').forEach(select => {
+                        const option = new Option(data.produit.nom, data.produit.id);
+                        select.add(option);
+                    });
+
+                    // Fermer la modal
+                    bootstrap.Modal.getInstance(document.getElementById('produitModal')).hide();
+
+                    // Reset form
+                    form.reset();
+
+                    // Show success message
+                    showNotification('Produit créé avec succès!', 'success');
+                } else {
+                    showNotification('Erreur lors de la création', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Une erreur est survenue', 'danger');
+            });
+    }
+
+    // Créer une nouvelle catégorie
+    function createCategorie() {
+        const form = document.getElementById('categorieForm');
+        const formData = new FormData(form);
+
+        fetch('{% url "produits:categorie_quick_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Ajouter la nouvelle catégorie au select du modal produit
+                    const select = document.getElementById('produitCategorieSelect');
+                    const option = new Option(data.categorie.nom, data.categorie.id);
+                    select.add(option);
+                    select.value = data.categorie.id; // Sélectionner la nouvelle catégorie
+
+                    // Fermer le modal catégorie et rouvrir produit
+                    // Note: Bootstrap 5 gère mal les transitions auto back-to-back via API JS pure parfois, 
+                    // mais les boutons data-bs-target gèrent le switch. Ici on doit le faire manuellement.
+                    const catModal = bootstrap.Modal.getInstance(document.getElementById('categorieModal'));
+                    catModal.hide();
+
+                    const prodModal = new bootstrap.Modal(document.getElementById('produitModal'));
+                    prodModal.show();
+
+                    // Reset form
+                    form.reset();
+
+                    showNotification('Catégorie créée avec succès!', 'success');
+                } else {
+                    let msg = 'Erreur lors de la création';
+                    if (data.errors && data.errors.nom) {
+                        msg = data.errors.nom[0];
+                    }
+                    showNotification(msg, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Une erreur est survenue', 'danger');
+            });
+    }
+
+    // Fonction de notification
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} notification`;
+        notification.innerHTML = `
         <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
         ${message}
     `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 100);
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
 </script>
 {% endblock %}

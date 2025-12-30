@@ -26,8 +26,8 @@
         <form method="get" class="row g-3">
             <!-- Recherche texte -->
             <div class="col-md-6">
-                <input type="text" name="q" class="form-control" placeholder="Rechercher un produit..." 
-                       value="{{ request.GET.q|default:'' }}">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher un produit..."
+                    value="{{ request.GET.q|default:'' }}">
             </div>
 
             <!-- Filtre catégorie -->
@@ -35,10 +35,11 @@
                 <select name="categorie" class="form-select">
                     <option value="">Toutes les catégories</option>
                     {% for categorie in categories %}
-                        <option value="{{ categorie.id }}" 
-                            {% if request.GET.categorie == categorie.id|add:"" %}selected{% endif %}>
-                            {{ categorie.nom }}
-                        </option>
+                    {% with cat_id=categorie.id|stringformat:"i" %}
+                    <option value="{{ categorie.id }}" {% if request.GET.categorie == cat_id %}selected{% endif %}>
+                        {{ categorie.nom }}
+                    </option>
+                    {% endwith %}
                     {% endfor %}
                 </select>
             </div>
@@ -88,9 +89,11 @@
                     <tr>
                         <td>
                             {% if produit.image %}
-                            <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            <img src="{{ produit.image.url }}" alt="{{ produit.nom }}" class="img-thumbnail"
+                                style="width: 50px; height: 50px; object-fit: cover;">
                             {% else %}
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <div class="bg-light d-flex align-items-center justify-content-center"
+                                style="width: 50px; height: 50px;">
                                 <i class="bi bi-image text-muted"></i>
                             </div>
                             {% endif %}
@@ -107,11 +110,13 @@
                         <td>
                             <strong class="montant-cfa">{{ produit.prix_vente|floatformat:0|intcomma }}</strong>
                             {% if produit.prix_achat %}
-                            <br><small class="text-muted">Achat: {{ produit.prix_achat|floatformat:0|intcomma }} FCFA</small>
+                            <br><small class="text-muted">Achat: {{ produit.prix_achat|floatformat:0|intcomma }}
+                                FCFA</small>
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %}">
+                            <span
+                                class="badge {% if produit.stock_critique %}bg-danger{% elif produit.quantite_stock < 10 %}bg-warning{% else %}bg-success{% endif %}">
                                 {{ produit.quantite_stock }}
                             </span>
                             {% if produit.stock_critique %}
@@ -127,15 +132,19 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{% url 'produits:detail' produit.slug %}" class="btn btn-outline-info" title="Voir">
+                                <a href="{% url 'produits:detail' produit.pk %}" class="btn btn-outline-info"
+                                    title="Voir">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if user.role in 'admin,manager' %}
-                                <a href="{% url 'produits:edit' produit.slug %}" class="btn btn-outline-warning" title="Modifier">
+                                <a href="{% url 'produits:update' produit.pk %}" class="btn btn-outline-warning"
+                                    title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {% if user.role == 'admin' %}
-                                <a href="{% url 'produits:delete' produit.slug %}" class="btn btn-outline-danger" title="Supprimer" data-confirm-delete="Êtes-vous sûr de vouloir supprimer ce produit ?">
+                                <a href="{% url 'produits:delete' produit.pk %}" class="btn btn-outline-danger"
+                                    title="Supprimer"
+                                    data-confirm-delete="Êtes-vous sûr de vouloir supprimer ce produit ?">
                                     <i class="bi bi-trash"></i>
                                 </a>
                                 {% endif %}
@@ -163,12 +172,14 @@
     <ul class="pagination justify-content-center">
         {% with q=request.GET.q categorie=request.GET.categorie %}
         {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Premier</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Précédent</a>
-            </li>
+        <li class="page-item">
+            <a class="page-link"
+                href="?page=1{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Premier</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Précédent</a>
+        </li>
         {% endif %}
 
         <li class="page-item active">
@@ -176,12 +187,14 @@
         </li>
 
         {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Suivant</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Dernier</a>
-            </li>
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Suivant</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if categorie %}&categorie={{ categorie }}{% endif %}">Dernier</a>
+        </li>
         {% endif %}
         {% endwith %}
     </ul>

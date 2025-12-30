@@ -26,14 +26,14 @@ def role_required(allowed_roles):
 
 def admin_required(view_func):
     """Decorator for admin-only views."""
-    return role_required(['admin'])(view_func)
+    return role_required(['admin', 'Administrateur'])(view_func)
 
 
 def manager_or_admin_cashier_required(view_func):
     """Decorator for manager and admin views."""
-    return role_required(['admin', 'manager', 'cashier'])(view_func)
+    return role_required(['admin', 'manager', 'cashier', 'Administrateur', 'Gestionnaire', 'Caissier'])(view_func)
 
 
 def cashier_access(view_func):
     """Decorator for cashier access (sales only)."""
-    return role_required(['admin', 'manager', 'cashier'])(view_func)
+    return role_required(['admin', 'manager', 'cashier', 'Administrateur', 'Gestionnaire', 'Caissier'])(view_func)

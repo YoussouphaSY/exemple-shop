@@ -15,7 +15,7 @@ class User(AbstractUser):
     
     email = models.EmailField(unique=True)
     telephone = models.CharField(max_length=15, blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Administrateur')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='admin')
     date_creation = models.DateTimeField(auto_now_add=True)
     
     USERNAME_FIELD = 'username'
