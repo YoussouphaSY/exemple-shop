@@ -199,7 +199,8 @@ parso==0.8.4
 pathspec==0.12.1
 patsy==1.0.1
 peewee==3.18.2
-pendulum==2.1.2
+# pendulum==2.1.2
+pendulum>=3.0.0,<4
 pexpect==4.9.0
 phik==0.12.4
 pillow==11.0.0
