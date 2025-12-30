@@ -169,7 +169,8 @@ networkx==3.5
 nltk==3.9.1
 notebook==7.4.2
 notebook_shim==0.2.4
-numba==0.57.1
+# numba==0.57.1
+numba>=0.58
 numpy==2.1.2
 nvidia-cublas-cu12==12.8.4.1
 nvidia-cuda-cupti-cu12==12.8.90
