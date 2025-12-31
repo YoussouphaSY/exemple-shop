@@ -28,7 +28,7 @@
             <div class="card-body m-3">
                 <form method="post" enctype="multipart/form-data" class="modern-form needs-validation" novalidate>
                     {% csrf_token %}
-                    
+
                     <div class="row g-3">
                         <div class="col-md-8">
                             <label class="form-label">{{ form.nom.label }}</label>
@@ -39,12 +39,12 @@
                             {{ form.categorie|add_class:"form-select" }}
                         </div>
                     </div>
-                    
+
                     <div class="mt-3">
                         <label class="form-label">{{ form.description.label }}</label>
                         {{ form.description|add_class:"form-control" }}
                     </div>
-                    
+
                     <div class="row g-3 mt-3">
                         <div class="col-md-6">
                             <label class="form-label">{{ form.prix_achat.label }}</label>
@@ -61,7 +61,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row g-3 mt-3">
                         <div class="col-md-6">
                             <label class="form-label">{{ form.quantite_stock.label }}</label>
@@ -72,26 +72,26 @@
                             {{ form.seuil_alerte|add_class:"form-control" }}
                         </div>
                     </div>
-                    
+
                     <div class="mt-3">
                         <label class="form-label">{{ form.image.label }}</label>
                         {{ form.image|add_class:"form-control" }}
                     </div>
-                    
+
                     <div class="form-check mt-3">
                         {{ form.actif|add_class:"form-check-input" }}
                         <label class="form-check-label" for="{{ form.actif.id_for_label }}">
                             {{ form.actif.label }}
                         </label>
                     </div>
-                    
+
                     <div class="d-flex justify-content-between mt-4">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-check-circle"></i>
                             {% if object %}Modifier{% else %}Créer{% endif %} le Produit
                         </button>
                         {% if object %}
-                        <a href="{% url 'produits:detail' object.slug %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'produits:detail' object.pk %}" class="btn btn-outline-secondary">
                             <i class="bi bi-eye"></i> Voir le Produit
                         </a>
                         {% endif %}
@@ -100,8 +100,8 @@
             </div>
         </div>
     </div>
-    
-    
+
+
     <div class="col-md-4">
         <div class="modern-card">
             <div class="card-header">
@@ -126,7 +126,7 @@
                         Vérifiez vos prix d'achat et de vente
                     </li>
                 </ul>
-                
+
                 {% if object %}
                 <hr>
                 <h6>Statistiques</h6>
@@ -138,7 +138,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- Aperçu de la marge -->
         <div class="modern-card mt-3">
             <div class="card-header">
@@ -155,7 +155,7 @@
                 </div>
             </div>
         </div>
-        
+
         {% if object and object.image %}
         <div class="modern-card mt-3">
             <div class="card-header">
@@ -172,57 +172,58 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Calcul automatique de la marge
-    const prixAchat = document.getElementById('id_prix_achat');
-    const prixVente = document.getElementById('id_prix_vente');
-    const margePreview = document.getElementById('marge-preview');
-    const beneficePreview = document.getElementById('benefice-preview');
-    
-    function calculerMarge() {
-        if (prixAchat.value && prixVente.value) {
-            const achat = parseFloat(prixAchat.value);
-            const vente = parseFloat(prixVente.value);
-            
-            if (achat > 0) {
-                const marge = ((vente - achat) / achat * 100);
-                const benefice = vente - achat;
-                
-                margePreview.innerHTML = `
+    document.addEventListener('DOMContentLoaded', function () {
+        // Calcul automatique de la marge
+        const prixAchat = document.getElementById('id_prix_achat');
+        const prixVente = document.getElementById('id_prix_vente');
+        const margePreview = document.getElementById('marge-preview');
+        const beneficePreview = document.getElementById('benefice-preview');
+
+        function calculerMarge() {
+            if (prixAchat.value && prixVente.value) {
+                const achat = parseFloat(prixAchat.value);
+                const vente = parseFloat(prixVente.value);
+
+                if (achat > 0) {
+                    const marge = ((vente - achat) / achat * 100);
+                    const benefice = vente - achat;
+
+                    margePreview.innerHTML = `
                     <h3 class="${marge > 0 ? 'text-success' : 'text-danger'}">${marge.toFixed(1)}%</h3>
                     <p class="text-muted">Marge bénéficiaire</p>
                 `;
-                
-                beneficePreview.innerHTML = `
+
+                    beneficePreview.innerHTML = `
                     <h4 class="${benefice > 0 ? 'text-success' : 'text-danger'}">${benefice.toLocaleString()} CFA</h4>
                     <small class="text-muted">Bénéfice unitaire</small>
                 `;
+                }
             }
         }
-    }
-    
-    if (prixAchat && prixVente) {
-        prixAchat.addEventListener('input', calculerMarge);
-        prixVente.addEventListener('input', calculerMarge);
-        
-        // Calcul initial
-        calculerMarge();
-    }
-    
-    // Validation du formulaire
-    const form = document.querySelector('.needs-validation');
-    form.addEventListener('submit', function(event) {
-        if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
+
+        if (prixAchat && prixVente) {
+            prixAchat.addEventListener('input', calculerMarge);
+            prixVente.addEventListener('input', calculerMarge);
+
+            // Calcul initial
+            calculerMarge();
         }
-        form.classList.add('was-validated');
-    });
-    
-    // Auto-génération du slug
-    const nomInput = document.getElementById('id_nom');
-    if (nomInput && !{{ object|yesno:"true,false" }}) {
-        nomInput.addEventListener('input', function() {
+
+        // Validation du formulaire
+        const form = document.querySelector('.needs-validation');
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // Auto-génération du slug
+        const nomInput = document.getElementById('id_nom');
+        if (nomInput && !{{ object | yesno: "true,false" }
+    }) {
+        nomInput.addEventListener('input', function () {
             // Le slug sera généré automatiquement côté serveur
         });
     }
