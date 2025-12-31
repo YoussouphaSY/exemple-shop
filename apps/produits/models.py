@@ -66,7 +66,7 @@ class Produit(models.Model):
                 img.save(self.image.path)
     
     def get_absolute_url(self):
-        return reverse('produits:detail', kwargs={'slug': self.slug})
+        return reverse('produits:detail', kwargs={'pk': self.pk})
     
     def update_stock(self, delta):
         """Update stock quantity. Positive delta for increase, negative for decrease."""
