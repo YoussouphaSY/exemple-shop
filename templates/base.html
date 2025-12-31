@@ -44,7 +44,7 @@
                         
                         <div class="nav flex-column">
                             <a href="{% url 'dashboard:index' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
-                                <i class="logo bi-graph-up-arrow px-2"></i> Tableau de Bord
+                                <i class="logo bi-graph-up-arrow px-2"></i> Général
                             </a>
                             
                             <a href="{% url 'produits:list' %}" class="nav-link text-white {% if request.resolver_match.app_name == 'produits' %}active{% endif %}">
