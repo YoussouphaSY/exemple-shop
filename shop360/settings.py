@@ -1,5 +1,6 @@
 """
 Django settings for shop360 project.
+# Reload trigger
 """
 
 from pathlib import Path
