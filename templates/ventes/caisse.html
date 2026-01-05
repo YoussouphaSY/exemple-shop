@@ -57,7 +57,7 @@
                     {% for produit in produits %}
                     <div class="product-item interactive-card" data-name="{{ produit.nom|lower }}"
                         data-category="{{ produit.categorie.nom|lower }}"
-                        onclick="addToCart({{ produit.id }}, '{{ produit.nom }}', {{ produit.prix_vente }}, {{ produit.quantite_stock }})">
+                        onclick="addToCart({{ produit.id }}, '{{ produit.nom }}', {{ produit.prix_vente|unlocalize }}, {{ produit.quantite_stock|unlocalize }})">
                         <div class="card h-100 product-card">
                             <div class="card-body text-center">
                                 {% if produit.image %}
