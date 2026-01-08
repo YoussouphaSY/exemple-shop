@@ -18,11 +18,19 @@ class Vente(models.Model):
         ('mobile', 'Paiement mobile'),
     ]
     
+    STATUT_PAIEMENT_CHOICES = [
+        ('paye', 'Payé'),
+        ('partiel', 'Partiel'),
+        ('impaye', 'Impayé'),
+    ]
+    
     numero = models.CharField(max_length=20, unique=True, blank=True)
     client = models.CharField(max_length=200, blank=True)
     telephone_client = models.CharField(max_length=15, blank=True)
     total_ht = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_ttc = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    montant_paye = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    statut_paiement = models.CharField(max_length=20, choices=STATUT_PAIEMENT_CHOICES, default='impaye')
     mode_paiement = models.CharField(max_length=20, choices=MODE_PAIEMENT_CHOICES, default='especes')
     vendeur = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="ventes_vendeur")
     date_vente = models.DateTimeField(auto_now_add=True)
@@ -41,7 +49,11 @@ class Vente(models.Model):
         ordering = ['-date_vente']
     
     def __str__(self):
-        return f"Vente {self.numero} - {self.total_ttc}€"
+        return f"Vente {self.numero} - {self.total_ttc} FCFA ({self.get_statut_paiement_display()})"
+    
+    @property
+    def reste_a_payer(self):
+        return self.total_ttc - self.montant_paye
     
     def save(self, *args, **kwargs):
         if not self.numero:
@@ -69,10 +81,13 @@ class Vente(models.Model):
         self.total_ttc = total_ttc
         self.save(update_fields=['total_ht', 'total_ttc'])
     
-    def finaliser(self):
+    def finaliser(self, montant_recu=None):
         """Finalize sale: update stock and create financial transaction."""
         if not self.items.exists():
             raise ValidationError("Impossible de finaliser une vente sans articles")
+        
+        if montant_recu is None:
+            montant_recu = self.total_ttc
         
         with transaction.atomic():
             # Update stock for each item
@@ -92,17 +107,28 @@ class Vente(models.Model):
                     reference=self.numero
                 )
             
-            # Create financial transaction
-            Transaction.objects.create(
-                type='RECETTE',
-                montant=self.total_ttc,
-                description=f"Vente {self.numero}",
-                vente=self,
-                utilisateur=self.vendeur
-            )
+            # Create financial transaction if there's a payment
+            if montant_recu > 0:
+                Transaction.objects.create(
+                    type='RECETTE',
+                    montant=montant_recu,
+                    description=f"Paiement Vente {self.numero}",
+                    vente=self,
+                    utilisateur=self.vendeur
+                )
             
-            # Recalculate totals
+            # Update payment status
+            self.montant_paye = montant_recu
+            if self.montant_paye >= self.total_ttc:
+                self.statut_paiement = 'paye'
+            elif self.montant_paye > 0:
+                self.statut_paiement = 'partiel'
+            else:
+                self.statut_paiement = 'impaye'
+            
+            # Recalculate totals and save payment status
             self.calculate_totals()
+            self.save(update_fields=['montant_paye', 'statut_paiement'])
 
 
 class VenteItem(models.Model):

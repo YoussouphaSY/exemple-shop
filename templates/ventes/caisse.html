@@ -178,6 +178,27 @@
                     Vérifiez les détails de la vente avant de confirmer
                 </div>
                 <div id="saleResume"></div>
+
+                <hr>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-primary text-white">Montant reçu</span>
+                            <input type="number" id="montantRecu" class="form-control" step="any"
+                                oninput="calculateChange()">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="changeDisplay"
+                            class="alert alert-secondary mb-0 py-2 h-100 d-flex align-items-center justify-content-center">
+                            <strong>Monnaie: 0 FCFA</strong>
+                        </div>
+                        <div id="balanceDisplay"
+                            class="alert alert-warning mb-0 py-2 h-100 d-flex align-items-center justify-content-center d-none">
+                            <strong>Reste: 0 FCFA</strong>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -520,9 +541,32 @@
 
         document.getElementById('saleResume').innerHTML = resumeHtml;
 
+        // Initialiser le montant reçu au total
+        document.getElementById('montantRecu').value = cartTotal;
+        calculateChange();
+
         // Afficher la modal
         const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
         modal.show();
+    }
+
+    // Calculer la monnaie ou le reste
+    function calculateChange() {
+        const montantRecu = parseFloat(document.getElementById('montantRecu').value) || 0;
+        const changeDisplay = document.getElementById('changeDisplay');
+        const balanceDisplay = document.getElementById('balanceDisplay');
+
+        if (montantRecu >= cartTotal) {
+            const change = montantRecu - cartTotal;
+            changeDisplay.innerHTML = `<strong>Monnaie: ${change.toLocaleString()} FCFA</strong>`;
+            changeDisplay.classList.remove('d-none');
+            balanceDisplay.classList.add('d-none');
+        } else {
+            const balance = cartTotal - montantRecu;
+            balanceDisplay.innerHTML = `<strong>Reste: ${balance.toLocaleString()} FCFA</strong>`;
+            balanceDisplay.classList.remove('d-none');
+            changeDisplay.classList.add('d-none');
+        }
     }
 
     // Confirmer la vente
@@ -536,7 +580,8 @@
                 quantite: item.quantity,
                 prix_unitaire: item.price,
                 prix_original: item.originalPrice  // Prix standard pour traçabilité
-            }))
+            })),
+            montant_paye: parseFloat(document.getElementById('montantRecu').value) || 0
         };
 
         // Afficher le loading

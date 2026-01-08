@@ -13,6 +13,8 @@ from .models import Vente, VenteItem
 from .forms import VenteForm, VenteItemFormSet
 from apps.produits.models import Produit
 from apps.users.decorators import cashier_access
+from django.db import transaction
+from decimal import Decimal
 from django.utils.decorators import method_decorator
 
 
@@ -116,6 +118,26 @@ class VenteUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return self.form_invalid(form)
 
 
+class DettesListView(LoginRequiredMixin, ListView):
+    model = Vente
+    template_name = 'ventes/dettes.html'
+    context_object_name = 'ventes'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return Vente.objects.filter(
+            statut_paiement__in=['partiel', 'impaye']
+        ).select_related('vendeur').order_by('-date_vente')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Total des dettes
+        dettes = self.get_queryset()
+        total_dettes = sum(v.reste_a_payer for v in dettes)
+        context['total_dettes'] = total_dettes
+        return context
+
+
 @method_decorator(cashier_access, name='dispatch')
 class CaisseView(LoginRequiredMixin, View):
     template_name = 'ventes/caisse.html'
@@ -151,7 +173,8 @@ class CaisseView(LoginRequiredMixin, View):
                 )
             
             # Finalize sale
-            vente.finaliser()
+            montant_paye = data.get('montant_paye')
+            vente.finaliser(montant_recu=montant_paye)
             print(f"DEBUG: Vente finalisée")  # DEBUG
             
             return JsonResponse({
@@ -173,14 +196,57 @@ class CaisseView(LoginRequiredMixin, View):
 class FinalizeVenteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         vente = get_object_or_404(Vente, pk=pk)
+        montant_recu = request.POST.get('montant_recu')
         
         try:
-            vente.finaliser()
+            if montant_recu:
+                montant_recu = float(montant_recu)
+            vente.finaliser(montant_recu=montant_recu)
             messages.success(request, 'Vente finalisée avec succès!')
         except Exception as e:
             messages.error(request, f'Erreur lors de la finalisation: {e}')
         
         return redirect('ventes:detail', pk=pk)
+
+
+class EnregistrerPaiementView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        vente = get_object_or_404(Vente, pk=pk)
+        try:
+            montant = float(request.POST.get('montant', 0))
+            mode = request.POST.get('mode_paiement', vente.mode_paiement)
+            
+            if montant <= 0:
+                messages.error(request, "Le montant doit être supérieur à 0")
+                return redirect('ventes:detail', pk=pk)
+            
+            with transaction.atomic():
+                # Créer la transaction
+                from apps.finance.models import Transaction
+                Transaction.objects.create(
+                    type='RECETTE',
+                    montant=montant,
+                    description=f"Complément paiement Vente {vente.numero}",
+                    vente=vente,
+                    utilisateur=request.user
+                )
+                
+                # Mettre à jour le montant payé
+                vente.montant_paye += Decimal(str(montant))
+                
+                # Mettre à jour le statut
+                if vente.montant_paye >= vente.total_ttc:
+                    vente.statut_paiement = 'paye'
+                else:
+                    vente.statut_paiement = 'partiel'
+                
+                vente.save(update_fields=['montant_paye', 'statut_paiement'])
+                
+            messages.success(request, f"Paiement de {montant} FCFA enregistré avec succès")
+        except Exception as e:
+            messages.error(request, f"Erreur lors de l'enregistrement du paiement: {e}")
+            
+        return redirect(request.META.get('HTTP_REFERER', 'ventes:list'))
 
 
 class TicketView(LoginRequiredMixin, DetailView):

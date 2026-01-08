@@ -11,5 +11,7 @@ urlpatterns = [
     path('<int:pk>/ticket/', views.TicketView.as_view(), name='ticket'),
     path('<int:pk>/finalize/', views.FinalizeVenteView.as_view(), name='finalize'),
     path('caisse/', views.CaisseView.as_view(), name='caisse'),
+    path('dettes/', views.DettesListView.as_view(), name='dettes'),
+    path('<int:pk>/payment/', views.EnregistrerPaiementView.as_view(), name='enregistrer_paiement'),
     path('export/', views.ExportVentesView.as_view(), name='export'),
 ]

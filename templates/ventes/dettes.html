@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load l10n %}
+
+{% block title %}Suivi des Dettes - Shop360{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="bi bi-person-exclamation text-warning"></i> Suivi des Dettes Clients</h1>
+        <p class="text-muted">Gérez les créances et enregistrez les nouveaux règlements.</p>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger border-0 shadow-sm text-white">
+            <div class="card-body py-3 px-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="small opacity-75">SOLDE TOTAL À RÉCUPÉRER</div>
+                    <h3 class="mb-0 fw-bold">{{ total_dettes|floatformat:0|intcomma }} FCFA</h3>
+                </div>
+                <i class="bi bi-bank2 fs-1 opacity-25"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modern-card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>N° Vente</th>
+                        <th>Client</th>
+                        <th>Vendeur</th>
+                        <th class="text-end">Total TTC</th>
+                        <th class="text-end">Montant Payé</th>
+                        <th class="text-end">Reste à Payer</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vente in ventes %}
+                    <tr>
+                        <td>{{ vente.date_vente|date:"d/m/Y H:i" }}</td>
+                        <td><a href="{% url 'ventes:detail' vente.pk %}" class="fw-bold">{{ vente.numero }}</a></td>
+                        <td>{{ vente.client|default:"Client anonyme" }}</td>
+                        <td>{{ vente.vendeur.username }}</td>
+                        <td class="text-end fw-bold">{{ vente.total_ttc|floatformat:0|intcomma }} FCFA</td>
+                        <td class="text-end text-success">{{ vente.montant_paye|floatformat:0|intcomma }} FCFA</td>
+                        <td class="text-end text-danger fw-bold">{{ vente.reste_a_payer|floatformat:0|intcomma }} FCFA
+                        </td>
+                        <td class="text-center">
+                            {% if vente.statut_paiement == 'partiel' %}
+                            <span class="badge bg-warning">Partiel</span>
+                            {% else %}
+                            <span class="badge bg-danger">Impayé</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary"
+                                    onclick="openPaymentModal({{ vente.pk }}, '{{ vente.numero }}', {{ vente.reste_a_payer|unlocalize }})"
+                                    title="Payer une partie">
+                                    <i class="bi bi-plus-circle"></i> Verser
+                                </button>
+                                <button class="btn btn-sm btn-success"
+                                    onclick="quickSettle({{ vente.pk }}, '{{ vente.numero }}', {{ vente.reste_a_payer|unlocalize }})"
+                                    title="Solder toute la dette">
+                                    <i class="bi bi-check-all"></i> Solder tout
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">Aucune dette en cours</h4>
+                                <p class="text-muted">Toutes les ventes sont soldées !</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}">Précédent</a></li>
+                {% endif %}
+                <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Paiement -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enregistrer un paiement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="paymentForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Référence Vente</label>
+                        <input type="text" id="venteRef" class="form-control" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reste à payer</label>
+                        <div class="input-group">
+                            <input type="text" id="venteBalance" class="form-control" readonly>
+                            <span class="input-group-text">FCFA</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant du versement</label>
+                        <div class="input-group">
+                            <input type="number" name="montant" id="paymentAmount" class="form-control" required
+                                step="1" min="1">
+                            <span class="input-group-text">FCFA</span>
+                        </div>
+                        <div class="form-text">Ce montant sera ajouté au total payé pour cette vente.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer le paiement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openPaymentModal(venteId, reference, balance) {
+        const form = document.getElementById('paymentForm');
+        form.action = `/ventes/${venteId}/payment/`;
+
+        document.getElementById('venteRef').value = reference;
+        document.getElementById('venteBalance').value = balance.toLocaleString();
+        document.getElementById('paymentAmount').value = ""; // Laisser vide pour forcer la saisie
+        document.getElementById('paymentAmount').placeholder = balance;
+        document.getElementById('paymentAmount').max = balance;
+
+        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        modal.show();
+    }
+
+    function quickSettle(venteId, reference, balance) {
+        if (confirm(`Voulez-vous solder la totalité de la dette pour la vente ${reference} (${balance.toLocaleString()} FCFA) ?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/ventes/${venteId}/payment/`;
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+
+            const montantInput = document.createElement('input');
+            montantInput.type = 'hidden';
+            montantInput.name = 'montant';
+            montantInput.value = balance;
+            form.appendChild(montantInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}
