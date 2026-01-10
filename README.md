@@ -1,5 +1,5 @@
 # Shop360 - Système de Gestion de Boutique
-
+ssh ubuntu@51.178.24.157
 Shop360 est une application web complète de gestion de boutique développée avec Django. Elle offre une vue 360° sur votre business : stocks, ventes, achats, finances et analytics.
 
 ## Fonctionnalités

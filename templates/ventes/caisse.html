@@ -552,9 +552,16 @@
 
     // Calculer la monnaie ou le reste
     function calculateChange() {
-        const montantRecu = parseFloat(document.getElementById('montantRecu').value) || 0;
+        const montantRecuInput = document.getElementById('montantRecu');
         const changeDisplay = document.getElementById('changeDisplay');
         const balanceDisplay = document.getElementById('balanceDisplay');
+
+        if (!montantRecuInput || !changeDisplay || !balanceDisplay) {
+            console.warn('Elements required for change calculation not found.');
+            return;
+        }
+
+        const montantRecu = parseFloat(montantRecuInput.value) || 0;
 
         if (montantRecu >= cartTotal) {
             const change = montantRecu - cartTotal;
