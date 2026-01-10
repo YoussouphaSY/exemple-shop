@@ -127,7 +127,7 @@ class Budget(models.Model):
             solde_total = Transaction.get_solde()
             if self.montant_prevu > solde_total:
                 raise ValidationError(
-                    {"montant_prevu": f"Le montant prévu ({self.montant_prevu} FCFA) dépasse le solde total ({solde_total} FFA)."}
+                    {"montant_prevu": f"Le montant prévu ({self.montant_prevu} FCFA) dépasse le solde total ({solde_total} FCFA)."}
                 )
     
 
