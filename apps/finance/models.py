@@ -43,11 +43,15 @@ class Transaction(models.Model):
 
     @classmethod
     def get_solde(cls):
-        recettes = cls.objects.filter(type='RECETTE').aggregate(total=Sum('montant'))['total'] or 0
-        depenses = cls.objects.filter(type='DEPENSE').aggregate(total=Sum('montant'))['total'] or 0
-        from .models import Budget
-        budgets = Budget.objects.filter(actif=True).aggregate(total=Sum('montant_prevu'))['total'] or 0
-        return recettes - depenses - budgets
+        """Calculate the free balance (Total Recettes - Total Dépenses - Active Budgets)."""
+        recettes = cls.objects.filter(type='RECETTE').aggregate(total=Sum('montant'))['total'] or Decimal('0')
+        depenses = cls.objects.filter(type='DEPENSE').aggregate(total=Sum('montant'))['total'] or Decimal('0')
+        
+        # We also subtract allocated budgets to know what is truly available
+        from apps.finance.models import Budget
+        budgets_actifs = Budget.objects.filter(actif=True).aggregate(total=Sum('montant_prevu'))['total'] or Decimal('0')
+        
+        return recettes - depenses - budgets_actifs
     
     # Relations optionnelles vers ventes/achats
     vente = models.ForeignKey('ventes.Vente', on_delete=models.CASCADE, null=True, blank=True, related_name='transactions')
@@ -78,18 +82,6 @@ class Transaction(models.Model):
         
         super().save(*args, **kwargs)
     
-    @classmethod
-    def get_solde(cls):
-        """Calculate current balance."""
-        recettes = cls.objects.filter(type='RECETTE').aggregate(
-            total=Sum('montant')
-        )['total'] or Decimal('0')
-        
-        depenses = cls.objects.filter(type='DEPENSE').aggregate(
-            total=Sum('montant')
-        )['total'] or Decimal('0')
-        
-        return recettes - depenses
     
     @classmethod
     def get_ca_periode(cls, date_debut, date_fin):
@@ -298,14 +290,16 @@ class CaisseFonds(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Création automatique de la Transaction si c'est un retrait ou une fermeture
-        if self.type in ['retrait', 'fermeture'] and self.montant > 0:
+        # Création automatique de la Transaction pour impacter le Solde Total
+        if self.montant > 0:
+            transaction_type = 'RECETTE' if self.type in ['ouverture', 'approvisionnement'] else 'DEPENSE'
+            
             Transaction.objects.create(
-                type='DEPENSE',
+                type=transaction_type,
                 montant=self.montant,
-                categorie=self.categorie_depense,
+                categorie=self.categorie_depense if transaction_type == 'DEPENSE' else 'autre',
                 description=f"{self.get_type_display()} caisse: {self.note}",
-                date_valeur=self.date.date(),
+                date_valeur=self.date.date() if self.date else timezone.now().date(),
                 utilisateur=self.utilisateur
             )
 
